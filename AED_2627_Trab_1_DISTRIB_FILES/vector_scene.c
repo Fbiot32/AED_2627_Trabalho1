@@ -9,8 +9,8 @@
 /**
  * STUDENT NAME: Fábio Espírito Santo
  * STUDENT NUMBER: 132325
- * STUDENT NAME:
- * STUDENT NUMBER:
+ * STUDENT NAME: Francisco Miguel Ferreira Almeida
+ * STUDENT NUMBER: 103751
  */
 
 #include "vector_scene.h"
@@ -30,11 +30,12 @@
  * @brief Concrete structure definition for VectorScene.
  * Hidden from vector_scene.h to enforce encapsulation.
  */
-struct _VectorScene {
+struct _VectorScene
+{
   int width;              /**< Canvas width in pixels */
   int height;             /**< Canvas height in pixels */
   Color bg_color;         /**< Default background color */
-  Primitive** primitives; /**< Dynamic array of pointers to Primitive */
+  Primitive **primitives; /**< Dynamic array of pointers to Primitive */
   size_t count;           /**< Current number of primitives in scene */
   size_t capacity;        /**< Allocated capacity for primitives array */
   int next_auto_id;       /**< Auto-increment ID generator */
@@ -49,14 +50,17 @@ struct _VectorScene {
 /**
  * @brief Helper to write an RGB pixel buffer to binary PPM file (P6 format).
  */
-static bool save_ppm_image(const char* filename, int width, int height,
-                           const uint8_t* pixel_buffer) {
-  if (!filename || !pixel_buffer || width <= 0 || height <= 0) {
+static bool save_ppm_image(const char *filename, int width, int height,
+                           const uint8_t *pixel_buffer)
+{
+  if (!filename || !pixel_buffer || width <= 0 || height <= 0)
+  {
     return false;
   }
 
-  FILE* file = fopen(filename, "wb");
-  if (!file) {
+  FILE *file = fopen(filename, "wb");
+  if (!file)
+  {
     return false;
   }
 
@@ -73,50 +77,64 @@ static bool save_ppm_image(const char* filename, int width, int height,
 // ACCESSORS / GETTERS (PROVIDED TO STUDENTS)
 // ============================================================================
 
-int vector_scene_get_width(const VectorScene* scene) {
-  if (!scene) {
+int vector_scene_get_width(const VectorScene *scene)
+{
+  if (!scene)
+  {
     return 0;
   }
   return scene->width;
 }
 
-int vector_scene_get_height(const VectorScene* scene) {
-  if (!scene) {
+int vector_scene_get_height(const VectorScene *scene)
+{
+  if (!scene)
+  {
     return 0;
   }
   return scene->height;
 }
 
-Color vector_scene_get_background_color(const VectorScene* scene) {
-  if (!scene) {
+Color vector_scene_get_background_color(const VectorScene *scene)
+{
+  if (!scene)
+  {
     Color black = {0, 0, 0};
     return black;
   }
   return scene->bg_color;
 }
 
-size_t vector_scene_get_count(const VectorScene* scene) {
-  if (!scene) {
+size_t vector_scene_get_count(const VectorScene *scene)
+{
+  if (!scene)
+  {
     return 0;
   }
   return scene->count;
 }
 
-Primitive* vector_scene_get_primitive_by_index(const VectorScene* scene,
-                                               size_t index) {
-  if (!scene || index >= scene->count) {
+Primitive *vector_scene_get_primitive_by_index(const VectorScene *scene,
+                                               size_t index)
+{
+  if (!scene || index >= scene->count)
+  {
     return NULL;
   }
   return scene->primitives[index];
 }
 
-Primitive* vector_scene_get_primitive_by_id(const VectorScene* scene, int id) {
-  if (!scene || id < 0) {
+Primitive *vector_scene_get_primitive_by_id(const VectorScene *scene, int id)
+{
+  if (!scene || id < 0)
+  {
     return NULL;
   }
 
-  for (size_t i = 0; i < scene->count; i++) {
-    if (scene->primitives[i] && scene->primitives[i]->id == id) {
+  for (size_t i = 0; i < scene->count; i++)
+  {
+    if (scene->primitives[i] && scene->primitives[i]->id == id)
+    {
       return scene->primitives[i];
     }
   }
@@ -127,36 +145,64 @@ Primitive* vector_scene_get_primitive_by_id(const VectorScene* scene, int id) {
 // SCENE LIFECYCLE (STUDENTS MUST COMPLETE)
 // ============================================================================
 
-VectorScene* vector_scene_create(int width, int height, Color bg_color) {
-  if (width <= 0 || height <= 0) {
+VectorScene *vector_scene_create(int width, int height, Color bg_color)
+{
+  if (width <= 0 || height <= 0)
+  {
     return NULL;
   }
 
-  /* TODO: Student Implementation
-   * 1. Allocate the VectorScene data structure.
-   * 2. Set capacity = INITIAL_SCENE_CAPACITY.
-   */
-  (void)bg_color;
-  return NULL;
+  // Allocate and initialize an empty scene
+  VectorScene *scene = malloc(sizeof *scene);
+
+  if (scene == NULL)
+  {
+    return NULL;
+  }
+
+  scene->width = width;
+  scene->height = height;
+  scene->bg_color = bg_color;
+  scene->count = 0;
+  scene->capacity = INITIAL_SCENE_CAPACITY;
+
+  scene->next_auto_id = 0;
+
+  scene->primitives = malloc(scene->capacity * sizeof *scene->primitives);
+
+  if (scene->primitives == NULL)
+  {
+    free(scene);
+    return NULL;
+  }
+
+  return scene;
 }
 
-void vector_scene_destroy(VectorScene* scene) {
-  if (!scene) {
+void vector_scene_destroy(VectorScene *scene)
+{
+  if (!scene)
+  {
     return;
   }
 
-  /* TODO: Student Implementation
-   * 1. Destroy each scene primitive.
-   * 2. Free all allocated memory.
-   */
+  for (size_t i = 0; i < scene->count; i++)
+  {
+    primitive_destroy(scene->primitives[i]);
+  }
+
+  free(scene->primitives);
+  free(scene);
 }
 
 // ============================================================================
 // COLLECTION MANAGEMENT (STUDENTS MUST COMPLETE)
 // ============================================================================
 
-int vector_scene_add_primitive(VectorScene* scene, Primitive* p) {
-  if (!scene || !p) {
+int vector_scene_add_primitive(VectorScene *scene, Primitive *p)
+{
+  if (!scene || !p)
+  {
     return -1;
   }
 
@@ -173,8 +219,10 @@ int vector_scene_add_primitive(VectorScene* scene, Primitive* p) {
   return -1;
 }
 
-bool vector_scene_remove_primitive(VectorScene* scene, int id) {
-  if (!scene || id < 0) {
+bool vector_scene_remove_primitive(VectorScene *scene, int id)
+{
+  if (!scene || id < 0)
+  {
     return false;
   }
 
@@ -188,9 +236,10 @@ bool vector_scene_remove_primitive(VectorScene* scene, int id) {
 // MANIPULATION AND TRANSFORMATIONS (STUDENTS MUST COMPLETE)
 // ============================================================================
 
-bool vector_scene_translate_primitive(VectorScene* scene, int id, double dx,
-                                      double dy) {
-  if (!scene) {
+bool vector_scene_translate_primitive(VectorScene *scene, int id, double dx, double dy)
+{
+  if (!scene)
+  {
     return false;
   }
 
@@ -202,8 +251,10 @@ bool vector_scene_translate_primitive(VectorScene* scene, int id, double dx,
   return false;
 }
 
-bool vector_scene_set_z_index(VectorScene* scene, int id, int new_z_index) {
-  if (!scene) {
+bool vector_scene_set_z_index(VectorScene *scene, int id, int new_z_index)
+{
+  if (!scene)
+  {
     return false;
   }
 
@@ -229,8 +280,9 @@ bool vector_scene_set_z_index(VectorScene* scene, int id, int new_z_index) {
  * @param count Number of elements in the array.
  * @param stats Pointer to SortStats structure to record performance metrics.
  */
-static void insertion_sort_by_z(Primitive** arr, size_t count,
-                                SortStats* stats) {
+static void insertion_sort_by_z(Primitive **arr, size_t count,
+                                SortStats *stats)
+{
   // TODO: Implement Insertion Sort by z_index
   // - Handle edge cases (count < 2).
   // - Iterate through elements from index 1 to count - 1.
@@ -258,8 +310,9 @@ static void insertion_sort_by_z(Primitive** arr, size_t count,
  * @param right Ending index of the second subarray.
  * @param stats Pointer to SortStats structure to track metrics (can be NULL).
  */
-static void merge_by_z(Primitive** arr, Primitive** temp_arr, size_t left,
-                       size_t mid, size_t right, SortStats* stats) {
+static void merge_by_z(Primitive **arr, Primitive **temp_arr, size_t left,
+                       size_t mid, size_t right, SortStats *stats)
+{
   // TODO: Implement Merge step for MergeSort
   // - Merge sorted halves [left..mid] and [mid+1..right] into temp_arr.
   // - Compare z_index of primitives and increment stats->comparisons.
@@ -286,8 +339,9 @@ static void merge_by_z(Primitive** arr, Primitive** temp_arr, size_t left,
  * @param right Ending index of the subarray to sort.
  * @param stats Pointer to SortStats structure to record performance metrics.
  */
-static void merge_sort_by_z(Primitive** arr, Primitive** temp_arr, size_t left,
-                            size_t right, SortStats* stats) {
+static void merge_sort_by_z(Primitive **arr, Primitive **temp_arr, size_t left,
+                            size_t right, SortStats *stats)
+{
   // TODO: Implement recursive MergeSort
   // - Base case: if left >= right, return.
   // - Calculate mid = left + (right - left) / 2.
@@ -301,9 +355,11 @@ static void merge_sort_by_z(Primitive** arr, Primitive** temp_arr, size_t left,
   (void)stats;
 }
 
-void vector_scene_sort_by_z(VectorScene* scene, bool use_fast_sort,
-                            SortStats* stats) {
-  if (scene == NULL || scene->count < 2) return;
+void vector_scene_sort_by_z(VectorScene *scene, bool use_fast_sort,
+                            SortStats *stats)
+{
+  if (scene == NULL || scene->count < 2)
+    return;
 
   /* TODO: Student Implementation & Benchmark Study
    * Reset stats (comparisons = 0, swaps = 0).
@@ -316,9 +372,11 @@ void vector_scene_sort_by_z(VectorScene* scene, bool use_fast_sort,
   (void)stats;
 }
 
-Primitive* vector_scene_pick_top_primitive(const VectorScene* scene, Point pt,
-                                           bool is_opt, PickStats* stats) {
-  if (!scene) {
+Primitive *vector_scene_pick_top_primitive(const VectorScene *scene, Point pt,
+                                           bool is_opt, PickStats *stats)
+{
+  if (!scene)
+  {
     return NULL;
   }
 
@@ -338,9 +396,11 @@ Primitive* vector_scene_pick_top_primitive(const VectorScene* scene, Point pt,
 // RENDERING / RASTERIZATION (STUDENTS MUST COMPLETE)
 // ============================================================================
 
-bool vector_scene_render(const VectorScene* scene,
-                         const char* output_filename) {
-  if (!scene || !output_filename) {
+bool vector_scene_render(const VectorScene *scene,
+                         const char *output_filename)
+{
+  if (!scene || !output_filename)
+  {
     return false;
   }
 
@@ -364,13 +424,16 @@ bool vector_scene_render(const VectorScene* scene,
 // FILE INPUT / OUTPUT (PROVIDED TO STUDENTS)
 // ============================================================================
 
-bool vector_scene_save_text(const VectorScene* scene, const char* filename) {
-  if (!scene || !filename) {
+bool vector_scene_save_text(const VectorScene *scene, const char *filename)
+{
+  if (!scene || !filename)
+  {
     return false;
   }
 
-  FILE* file = fopen(filename, "w");
-  if (!file) {
+  FILE *file = fopen(filename, "w");
+  if (!file)
+  {
     return false;
   }
 
@@ -378,45 +441,49 @@ bool vector_scene_save_text(const VectorScene* scene, const char* filename) {
   fprintf(file, "SCENE %d %d %d %d %d\n", scene->width, scene->height, bg.r,
           bg.g, bg.b);
 
-  for (size_t i = 0; i < scene->count; i++) {
-    Primitive* p = scene->primitives[i];
-    if (!p) {
+  for (size_t i = 0; i < scene->count; i++)
+  {
+    Primitive *p = scene->primitives[i];
+    if (!p)
+    {
       continue;
     }
 
     Color c = p->color;
 
-    switch (p->type) {
-      case PRIM_CIRCLE:
-        fprintf(file, "CIRC %d %d %d %d %d %.3f %.2f %.2f %.2f\n", p->id,
-                p->z_index, c.r, c.g, c.b, p->alpha, p->geom.circle.center.x,
-                p->geom.circle.center.y, p->geom.circle.radius);
-        break;
+    switch (p->type)
+    {
+    case PRIM_CIRCLE:
+      fprintf(file, "CIRC %d %d %d %d %d %.3f %.2f %.2f %.2f\n", p->id,
+              p->z_index, c.r, c.g, c.b, p->alpha, p->geom.circle.center.x,
+              p->geom.circle.center.y, p->geom.circle.radius);
+      break;
 
-      case PRIM_RECTANGLE:
-        fprintf(file, "RECT %d %d %d %d %d %.3f %.2f %.2f %.2f %.2f\n", p->id,
-                p->z_index, c.r, c.g, c.b, p->alpha,
-                p->geom.rectangle.top_left.x, p->geom.rectangle.top_left.y,
-                p->geom.rectangle.width, p->geom.rectangle.height);
-        break;
+    case PRIM_RECTANGLE:
+      fprintf(file, "RECT %d %d %d %d %d %.3f %.2f %.2f %.2f %.2f\n", p->id,
+              p->z_index, c.r, c.g, c.b, p->alpha,
+              p->geom.rectangle.top_left.x, p->geom.rectangle.top_left.y,
+              p->geom.rectangle.width, p->geom.rectangle.height);
+      break;
 
-      case PRIM_SEGMENT:
-        fprintf(file, "SEG %d %d %d %d %d %.3f %.2f %.2f %.2f %.2f\n", p->id,
-                p->z_index, c.r, c.g, c.b, p->alpha, p->geom.segment.p1.x,
-                p->geom.segment.p1.y, p->geom.segment.p2.x,
-                p->geom.segment.p2.y);
-        break;
+    case PRIM_SEGMENT:
+      fprintf(file, "SEG %d %d %d %d %d %.3f %.2f %.2f %.2f %.2f\n", p->id,
+              p->z_index, c.r, c.g, c.b, p->alpha, p->geom.segment.p1.x,
+              p->geom.segment.p1.y, p->geom.segment.p2.x,
+              p->geom.segment.p2.y);
+      break;
 
-      case PRIM_POLYGON:
-        fprintf(file, "POLY %d %d %d %d %d %.3f %zu", p->id, p->z_index, c.r,
-                c.g, c.b, p->alpha, p->geom.polygon.num_vertices);
+    case PRIM_POLYGON:
+      fprintf(file, "POLY %d %d %d %d %d %.3f %zu", p->id, p->z_index, c.r,
+              c.g, c.b, p->alpha, p->geom.polygon.num_vertices);
 
-        for (size_t v = 0; v < p->geom.polygon.num_vertices; v++) {
-          fprintf(file, " %.2f %.2f", p->geom.polygon.vertices[v].x,
-                  p->geom.polygon.vertices[v].y);
-        }
-        fprintf(file, "\n");
-        break;
+      for (size_t v = 0; v < p->geom.polygon.num_vertices; v++)
+      {
+        fprintf(file, " %.2f %.2f", p->geom.polygon.vertices[v].x,
+                p->geom.polygon.vertices[v].y);
+      }
+      fprintf(file, "\n");
+      break;
     }
   }
 
@@ -424,107 +491,140 @@ bool vector_scene_save_text(const VectorScene* scene, const char* filename) {
   return true;
 }
 
-VectorScene* vector_scene_load_text(const char* filename) {
-  if (!filename) {
+VectorScene *vector_scene_load_text(const char *filename)
+{
+  if (!filename)
+  {
     return NULL;
   }
 
-  FILE* file = fopen(filename, "r");
-  if (!file) {
+  FILE *file = fopen(filename, "r");
+  if (!file)
+  {
     return NULL;
   }
 
   char line[1024];
-  VectorScene* scene = NULL;
+  VectorScene *scene = NULL;
 
-  while (fgets(line, sizeof(line), file)) {
-    if (line[0] == '#' || line[0] == '\n' || line[0] == '\r') {
+  while (fgets(line, sizeof(line), file))
+  {
+    if (line[0] == '#' || line[0] == '\n' || line[0] == '\r')
+    {
       continue;
     }
 
     char tag[16];
-    if (sscanf(line, "%15s", tag) != 1) {
+    if (sscanf(line, "%15s", tag) != 1)
+    {
       continue;
     }
 
-    if (strcmp(tag, "SCENE") == 0) {
+    if (strcmp(tag, "SCENE") == 0)
+    {
       int w, h, r, g, b;
-      if (sscanf(line, "SCENE %d %d %d %d %d", &w, &h, &r, &g, &b) == 5) {
+      if (sscanf(line, "SCENE %d %d %d %d %d", &w, &h, &r, &g, &b) == 5)
+      {
         Color bg = {(uint8_t)r, (uint8_t)g, (uint8_t)b};
         scene = vector_scene_create(w, h, bg);
       }
-    } else if (scene != NULL) {
+    }
+    else if (scene != NULL)
+    {
       int id, z_index, r, g, b;
       double alpha;
 
-      if (strcmp(tag, "CIRC") == 0) {
+      if (strcmp(tag, "CIRC") == 0)
+      {
         double cx, cy, radius;
         if (sscanf(line, "CIRC %d %d %d %d %d %lf %lf %lf %lf", &id, &z_index,
-                   &r, &g, &b, &alpha, &cx, &cy, &radius) == 9) {
+                   &r, &g, &b, &alpha, &cx, &cy, &radius) == 9)
+        {
           Point center = {cx, cy};
           Color color = {(uint8_t)r, (uint8_t)g, (uint8_t)b};
-          Primitive* p = primitive_create_circle(id, center, radius, color,
+          Primitive *p = primitive_create_circle(id, center, radius, color,
                                                  alpha, z_index);
-          if (p) {
+          if (p)
+          {
             vector_scene_add_primitive(scene, p);
           }
         }
-      } else if (strcmp(tag, "RECT") == 0) {
+      }
+      else if (strcmp(tag, "RECT") == 0)
+      {
         double x, y, w, h;
         if (sscanf(line, "RECT %d %d %d %d %d %lf %lf %lf %lf %lf", &id,
-                   &z_index, &r, &g, &b, &alpha, &x, &y, &w, &h) == 10) {
+                   &z_index, &r, &g, &b, &alpha, &x, &y, &w, &h) == 10)
+        {
           Point top_left = {x, y};
           Color color = {(uint8_t)r, (uint8_t)g, (uint8_t)b};
-          Primitive* p = primitive_create_rectangle(id, top_left, w, h, color,
+          Primitive *p = primitive_create_rectangle(id, top_left, w, h, color,
                                                     alpha, z_index);
-          if (p) {
+          if (p)
+          {
             vector_scene_add_primitive(scene, p);
           }
         }
-      } else if (strcmp(tag, "SEG") == 0) {
+      }
+      else if (strcmp(tag, "SEG") == 0)
+      {
         double x1, y1, x2, y2;
         if (sscanf(line, "SEG %d %d %d %d %d %lf %lf %lf %lf %lf", &id,
-                   &z_index, &r, &g, &b, &alpha, &x1, &y1, &x2, &y2) == 10) {
+                   &z_index, &r, &g, &b, &alpha, &x1, &y1, &x2, &y2) == 10)
+        {
           Point p1 = {x1, y1};
           Point p2 = {x2, y2};
           Color color = {(uint8_t)r, (uint8_t)g, (uint8_t)b};
-          Primitive* p =
+          Primitive *p =
               primitive_create_segment(id, p1, p2, color, alpha, z_index);
-          if (p) {
+          if (p)
+          {
             vector_scene_add_primitive(scene, p);
           }
         }
-      } else if (strcmp(tag, "POLY") == 0) {
+      }
+      else if (strcmp(tag, "POLY") == 0)
+      {
         size_t num_verts;
         int read_header = sscanf(line, "POLY %d %d %d %d %d %lf %zu", &id,
                                  &z_index, &r, &g, &b, &alpha, &num_verts);
-        if (read_header == 7) {
+        if (read_header == 7)
+        {
           Color color = {(uint8_t)r, (uint8_t)g, (uint8_t)b};
-          Primitive* p = primitive_create_polygon(id, color, alpha, z_index);
-          if (p) {
-            char* ptr = line;
-            for (int k = 0; k < 7; k++) {
-              while (*ptr && *ptr != ' ' && *ptr != '\t') {
+          Primitive *p = primitive_create_polygon(id, color, alpha, z_index);
+          if (p)
+          {
+            char *ptr = line;
+            for (int k = 0; k < 7; k++)
+            {
+              while (*ptr && *ptr != ' ' && *ptr != '\t')
+              {
                 ptr++;
               }
-              while (*ptr && (*ptr == ' ' || *ptr == '\t')) {
+              while (*ptr && (*ptr == ' ' || *ptr == '\t'))
+              {
                 ptr++;
               }
             }
 
-            for (size_t v = 0; v < num_verts; v++) {
+            for (size_t v = 0; v < num_verts; v++)
+            {
               double vx, vy;
-              if (sscanf(ptr, "%lf %lf", &vx, &vy) == 2) {
+              if (sscanf(ptr, "%lf %lf", &vx, &vy) == 2)
+              {
                 Point pt = {vx, vy};
                 polygon_add_vertex(p, pt);
 
-                for (int k = 0; k < 2; k++) {
+                for (int k = 0; k < 2; k++)
+                {
                   while (*ptr && *ptr != ' ' && *ptr != '\t' && *ptr != '\n' &&
-                         *ptr != '\r') {
+                         *ptr != '\r')
+                  {
                     ptr++;
                   }
                   while (*ptr && (*ptr == ' ' || *ptr == '\t' || *ptr == '\n' ||
-                                  *ptr == '\r')) {
+                                  *ptr == '\r'))
+                  {
                     ptr++;
                   }
                 }

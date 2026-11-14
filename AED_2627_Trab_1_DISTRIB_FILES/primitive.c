@@ -9,8 +9,8 @@
 /**
  * STUDENT NAME: Fábio Espírito Santo
  * STUDENT NUMBER: 132325
- * STUDENT NAME:
- * STUDENT NUMBER:
+ * STUDENT NAME: Francisco Miguel Ferreira Almeida
+ * STUDENT NUMBER: 103751
  */
 
 #include "primitive.h"
@@ -29,7 +29,8 @@
 /**
  * @brief Tests exact containment of a point inside a circle.
  */
-static bool math_circle_contains_point(Point center, double radius, Point pt) {
+static bool math_circle_contains_point(Point center, double radius, Point pt)
+{
   double dx = pt.x - center.x;
   double dy = pt.y - center.y;
   return (dx * dx + dy * dy) <= (radius * radius);
@@ -39,7 +40,8 @@ static bool math_circle_contains_point(Point center, double radius, Point pt) {
  * @brief Tests exact containment of a point inside an axis-aligned rectangle.
  */
 static bool math_rect_contains_point(Point top_left, double width,
-                                     double height, Point pt) {
+                                     double height, Point pt)
+{
   return (pt.x >= top_left.x && pt.x <= (top_left.x + width) &&
           pt.y >= top_left.y && pt.y <= (top_left.y + height));
 }
@@ -48,18 +50,23 @@ static bool math_rect_contains_point(Point top_left, double width,
  * @brief Tests exact containment of a point near line segment (with tolerance).
  */
 static bool math_segment_contains_point(Point p1, Point p2, double tolerance,
-                                        Point pt) {
+                                        Point pt)
+{
   double l2 = (p2.x - p1.x) * (p2.x - p1.x) + (p2.y - p1.y) * (p2.y - p1.y);
-  if (l2 == 0.0) {
+  if (l2 == 0.0)
+  {
     double dx = pt.x - p1.x;
     double dy = pt.y - p1.y;
     return sqrt(dx * dx + dy * dy) <= tolerance;
   }
   double t =
       ((pt.x - p1.x) * (p2.x - p1.x) + (pt.y - p1.y) * (p2.y - p1.y)) / l2;
-  if (t < 0.0) {
+  if (t < 0.0)
+  {
     t = 0.0;
-  } else if (t > 1.0) {
+  }
+  else if (t > 1.0)
+  {
     t = 1.0;
   }
 
@@ -74,20 +81,24 @@ static bool math_segment_contains_point(Point p1, Point p2, double tolerance,
 /**
  * @brief Tests containment of point inside polygon using Ray-Casting.
  */
-static bool math_polygon_contains_point(const Point* vertices,
-                                        size_t num_vertices, Point pt) {
-  if (num_vertices < 3 || vertices == NULL) {
+static bool math_polygon_contains_point(const Point *vertices,
+                                        size_t num_vertices, Point pt)
+{
+  if (num_vertices < 3 || vertices == NULL)
+  {
     return false;
   }
 
   bool inside = false;
-  for (size_t i = 0, j = num_vertices - 1; i < num_vertices; j = i++) {
+  for (size_t i = 0, j = num_vertices - 1; i < num_vertices; j = i++)
+  {
     double xi = vertices[i].x, yi = vertices[i].y;
     double xj = vertices[j].x, yj = vertices[j].y;
 
     bool intersect = ((yi > pt.y) != (yj > pt.y)) &&
                      (pt.x < (xj - xi) * (pt.y - yi) / (yj - yi) + xi);
-    if (intersect) {
+    if (intersect)
+    {
       inside = !inside;
     }
   }
@@ -101,11 +112,13 @@ static bool math_polygon_contains_point(const Point* vertices,
 /**
  * @brief Allocates base Primitive structure and initializes common fields.
  */
-static Primitive* primitive_allocate_common(int id, PrimitiveType type,
+static Primitive *primitive_allocate_common(int id, PrimitiveType type,
                                             Color color, double alpha,
-                                            int z_index) {
-  Primitive* p = calloc(1, sizeof(Primitive));
-  if (p == NULL) {
+                                            int z_index)
+{
+  Primitive *p = calloc(1, sizeof(Primitive));
+  if (p == NULL)
+  {
     return NULL;
   }
 
@@ -125,47 +138,60 @@ static Primitive* primitive_allocate_common(int id, PrimitiveType type,
 // INSPECTION / GETTER FUNCTIONS (PROVIDED TO STUDENTS)
 // ============================================================================
 
-int primitive_get_id(const Primitive* p) {
-  if (p == NULL) return -1;
+int primitive_get_id(const Primitive *p)
+{
+  if (p == NULL)
+    return -1;
   return p->id;
 }
 
-PrimitiveType primitive_get_type(const Primitive* p) {
+PrimitiveType primitive_get_type(const Primitive *p)
+{
   assert(p != NULL && "Primitive pointer is NULL");
 
   return p->type;
 }
 
-int primitive_get_z_index(const Primitive* p) {
-  if (p == NULL) return 0;
+int primitive_get_z_index(const Primitive *p)
+{
+  if (p == NULL)
+    return 0;
   return p->z_index;
 }
 
-Color primitive_get_color(const Primitive* p) {
-  if (p == NULL) {
+Color primitive_get_color(const Primitive *p)
+{
+  if (p == NULL)
+  {
     Color black = {0, 0, 0};
     return black;
   }
   return p->color;
 }
 
-double primitive_get_alpha(const Primitive* p) {
-  if (p == NULL) return 0.0;
+double primitive_get_alpha(const Primitive *p)
+{
+  if (p == NULL)
+    return 0.0;
   return p->alpha;
 }
 
-BoundingBox primitive_get_aabb(Primitive* p) {
+BoundingBox primitive_get_aabb(Primitive *p)
+{
   assert(p != NULL && "Primitive pointer is NULL");
 
   // Force AABB update
-  if (p->is_aabb_dirty) {
+  if (p->is_aabb_dirty)
+  {
     primitive_update_aabb(p);
   }
   return p->aabb;
 }
 
-size_t polygon_get_num_vertices(const Primitive* p) {
-  if (p == NULL || p->type != PRIM_POLYGON) return 0;
+size_t polygon_get_num_vertices(const Primitive *p)
+{
+  if (p == NULL || p->type != PRIM_POLYGON)
+    return 0;
   return p->geom.polygon.num_vertices;
 }
 
@@ -177,18 +203,21 @@ size_t polygon_get_num_vertices(const Primitive* p) {
  * [PROVIDED AS REFERENCE MODEL]
  * Creates and dynamically allocates a Circle primitive.
  */
-Primitive* primitive_create_circle(int id, Point center, double radius,
-                                   Color color, double alpha, int z_index) {
-  if (radius <= 0.0 || alpha < 0.0 || alpha > 1.0) {
+Primitive *primitive_create_circle(int id, Point center, double radius,
+                                   Color color, double alpha, int z_index)
+{
+  if (radius <= 0.0 || alpha < 0.0 || alpha > 1.0)
+  {
     return NULL;
   }
 
-  Primitive* p =
+  Primitive *p =
       primitive_allocate_common(id, PRIM_CIRCLE, color, alpha, z_index);
-  if (p == NULL) {
+  if (p == NULL)
+  {
     return NULL;
   }
-  
+
   p->geom.circle.center = center;
   p->geom.circle.radius = radius;
 
@@ -198,17 +227,20 @@ Primitive* primitive_create_circle(int id, Point center, double radius,
   return p;
 }
 
-Primitive* primitive_create_rectangle(int id, Point top_left, double width,
+Primitive *primitive_create_rectangle(int id, Point top_left, double width,
                                       double height, Color color, double alpha,
-                                      int z_index) {
+                                      int z_index)
+{
 
-  if (height <= 0.0 || width <= 0.0 || alpha < 0.0 || alpha > 1.0) {
+  if (height <= 0.0 || width <= 0.0 || alpha < 0.0 || alpha > 1.0)
+  {
     return NULL;
   }
 
-  Primitive* p =
+  Primitive *p =
       primitive_allocate_common(id, PRIM_RECTANGLE, color, alpha, z_index);
-  if (p == NULL) {
+  if (p == NULL)
+  {
     return NULL;
   }
   p->geom.rectangle.top_left = top_left;
@@ -221,16 +253,19 @@ Primitive* primitive_create_rectangle(int id, Point top_left, double width,
   return p;
 }
 
-Primitive* primitive_create_segment(int id, Point p1, Point p2, Color color,
-                                    double alpha, int z_index) {
+Primitive *primitive_create_segment(int id, Point p1, Point p2, Color color,
+                                    double alpha, int z_index)
+{
 
-  if (alpha < 0.0 || alpha > 1.0) {
+  if (alpha < 0.0 || alpha > 1.0)
+  {
     return NULL;
   }
 
-  Primitive* p =
+  Primitive *p =
       primitive_allocate_common(id, PRIM_SEGMENT, color, alpha, z_index);
-  if (p == NULL) {
+  if (p == NULL)
+  {
     return NULL;
   }
   p->geom.segment.p1 = p1;
@@ -242,15 +277,18 @@ Primitive* primitive_create_segment(int id, Point p1, Point p2, Color color,
   return p;
 }
 
-Primitive* primitive_create_polygon(int id, Color color, double alpha,
-                                    int z_index) {
-  if (alpha < 0.0 || alpha > 1.0) {
+Primitive *primitive_create_polygon(int id, Color color, double alpha,
+                                    int z_index)
+{
+  if (alpha < 0.0 || alpha > 1.0)
+  {
     return NULL;
   }
 
-  Primitive* p =
+  Primitive *p =
       primitive_allocate_common(id, PRIM_POLYGON, color, alpha, z_index);
-  if (p == NULL) {
+  if (p == NULL)
+  {
     return NULL;
   }
 
@@ -261,12 +299,15 @@ Primitive* primitive_create_polygon(int id, Color color, double alpha,
   return p;
 }
 
-void primitive_destroy(Primitive* p) {
-  if( p == NULL) {
+void primitive_destroy(Primitive *p)
+{
+  if (p == NULL)
+  {
     return;
   }
 
-  if(p->type == PRIM_POLYGON) {       // Só o Poligono é que tem memória interna (vertices)
+  if (p->type == PRIM_POLYGON)
+  { // Só o Poligono é que tem memória interna (vertices)
     free(p->geom.polygon.vertices);
   }
 
@@ -277,7 +318,8 @@ void primitive_destroy(Primitive* p) {
 // DYNAMIC ARRAY MANIPULATION (POLYGON) (STUDENTS MUST COMPLETE)
 // ============================================================================
 
-bool polygon_add_vertex(Primitive* p, Point pt) {
+bool polygon_add_vertex(Primitive *p, Point pt)
+{
   /* TODO: Student Implementation
    */
   (void)p;
@@ -285,7 +327,8 @@ bool polygon_add_vertex(Primitive* p, Point pt) {
   return false;
 }
 
-bool polygon_remove_vertex(Primitive* p, size_t index) {
+bool polygon_remove_vertex(Primitive *p, size_t index)
+{
   /* TODO: Student Implementation
    */
   (void)p;
@@ -297,41 +340,46 @@ bool polygon_remove_vertex(Primitive* p, size_t index) {
 // GEOMETRIC OPERATIONS AND TRANSFORMATIONS (STUDENTS MUST COMPLETE)
 // ============================================================================
 
-void primitive_update_aabb(Primitive* p) {
-  if (p == NULL || !p->is_aabb_dirty) {
+void primitive_update_aabb(Primitive *p)
+{
+  if (p == NULL || !p->is_aabb_dirty)
+  {
     return;
   }
 
-  switch (p->type) {
-    case PRIM_CIRCLE:
-      p->aabb.min.x = p->geom.circle.center.x - p->geom.circle.radius;
-      p->aabb.min.y = p->geom.circle.center.y - p->geom.circle.radius;
-      p->aabb.max.x = p->geom.circle.center.x + p->geom.circle.radius;
-      p->aabb.max.y = p->geom.circle.center.y + p->geom.circle.radius;
-      break;
+  switch (p->type)
+  {
+  case PRIM_CIRCLE:
+    p->aabb.min.x = p->geom.circle.center.x - p->geom.circle.radius;
+    p->aabb.min.y = p->geom.circle.center.y - p->geom.circle.radius;
+    p->aabb.max.x = p->geom.circle.center.x + p->geom.circle.radius;
+    p->aabb.max.y = p->geom.circle.center.y + p->geom.circle.radius;
+    break;
 
-    case PRIM_RECTANGLE:
-      /* TODO: Compute AABB for Rectangle
-       */
-      break;
+  case PRIM_RECTANGLE:
+    /* TODO: Compute AABB for Rectangle
+     */
+    break;
 
-    case PRIM_SEGMENT:
-      /* TODO: Compute AABB for Segment
-       */
-      break;
+  case PRIM_SEGMENT:
+    /* TODO: Compute AABB for Segment
+     */
+    break;
 
-    case PRIM_POLYGON:
-      /* TODO: Compute AABB for Polygon
-       * Iterate vertices array to find min/max coordinates
-       */
-      break;
+  case PRIM_POLYGON:
+    /* TODO: Compute AABB for Polygon
+     * Iterate vertices array to find min/max coordinates
+     */
+    break;
   }
 
   p->is_aabb_dirty = false;
 }
 
-void primitive_translate(Primitive* p, double dx, double dy) {
-  if (p == NULL) {
+void primitive_translate(Primitive *p, double dx, double dy)
+{
+  if (p == NULL)
+  {
     return;
   }
 
@@ -347,8 +395,10 @@ void primitive_translate(Primitive* p, double dx, double dy) {
   (void)dy;
 }
 
-void primitive_scale(Primitive* p, double factor) {
-  if (p == NULL || factor <= 0.0) {
+void primitive_scale(Primitive *p, double factor)
+{
+  if (p == NULL || factor <= 0.0)
+  {
     return;
   }
 
@@ -363,31 +413,34 @@ void primitive_scale(Primitive* p, double factor) {
   (void)factor;
 }
 
-bool primitive_contains_point(const Primitive* p, Point pt) {
-  if (p == NULL) {
+bool primitive_contains_point(const Primitive *p, Point pt)
+{
+  if (p == NULL)
+  {
     return false;
   }
 
   // Narrow-phase exact geometric test dispatch
-  switch (p->type) {
-    case PRIM_CIRCLE:
-      return math_circle_contains_point(p->geom.circle.center,
-                                        p->geom.circle.radius, pt);
+  switch (p->type)
+  {
+  case PRIM_CIRCLE:
+    return math_circle_contains_point(p->geom.circle.center,
+                                      p->geom.circle.radius, pt);
 
-    case PRIM_RECTANGLE:
-      /* TODO: Does rectangle contain point?
-       */
-      return false;
+  case PRIM_RECTANGLE:
+    /* TODO: Does rectangle contain point?
+     */
+    return false;
 
-    case PRIM_SEGMENT:
-      /* TODO: Does segment contain point?
-       */
-      return false;
+  case PRIM_SEGMENT:
+    /* TODO: Does segment contain point?
+     */
+    return false;
 
-    case PRIM_POLYGON:
-      /* TODO: Does polygon contain point?
-       */
-      return false;
+  case PRIM_POLYGON:
+    /* TODO: Does polygon contain point?
+     */
+    return false;
   }
 
   return false;
