@@ -7,7 +7,7 @@
  */
 
 /**
- * STUDENT NAME: Fábio Espírito Santo
+ * STUDENT NAME: Fábio Alexandre Coragem Espírito Santo
  * STUDENT NUMBER: 132325
  * STUDENT NAME: Francisco Miguel Ferreira Almeida
  * STUDENT NUMBER: 103751

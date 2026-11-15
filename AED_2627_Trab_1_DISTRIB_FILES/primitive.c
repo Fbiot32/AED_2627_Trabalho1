@@ -7,7 +7,7 @@
  */
 
 /**
- * STUDENT NAME: Fábio Espírito Santo
+ * STUDENT NAME: Fábio Alexandre Coragem Espírito Santo
  * STUDENT NUMBER: 132325
  * STUDENT NAME: Francisco Miguel Ferreira Almeida
  * STUDENT NUMBER: 103751
@@ -320,20 +320,50 @@ void primitive_destroy(Primitive *p)
 
 bool polygon_add_vertex(Primitive *p, Point pt)
 {
-  /* TODO: Student Implementation
-   */
-  (void)p;
-  (void)pt;
-  return false;
+  if (p == NULL || p->type != PRIM_POLYGON) {
+    return false;
+  }
+
+  size_t newCapacity;
+
+  if (p->geom.polygon.capacity == p->geom.polygon.num_vertices) {
+    if (p->geom.polygon.capacity == 0) {
+      newCapacity = 1;
+    } else {
+      newCapacity = p->geom.polygon.capacity * 2;
+    }
+    Point* tmp = (Point*)realloc(p->geom.polygon.vertices, newCapacity * sizeof(Point));
+    if (tmp == NULL)  {return false;}
+    p->geom.polygon.vertices = tmp;
+    p->geom.polygon.capacity = newCapacity;
+    
+  }
+
+  p->geom.polygon.vertices[p->geom.polygon.num_vertices] = pt;
+  p->geom.polygon.num_vertices++;
+  
+  p->is_aabb_dirty = true;
+
+  return true;
 }
 
 bool polygon_remove_vertex(Primitive *p, size_t index)
 {
-  /* TODO: Student Implementation
-   */
-  (void)p;
-  (void)index;
-  return false;
+  if (p == NULL || p->type != PRIM_POLYGON || index >= p->geom.polygon.num_vertices) {
+    return false;
+  }
+
+  for (size_t i = index; i + 1 < p->geom.polygon.num_vertices; i++)
+  {
+    p->geom.polygon.vertices[i] = p->geom.polygon.vertices[i+1];
+  }
+  
+  p->geom.polygon.num_vertices--;
+
+
+  p->is_aabb_dirty = true;
+
+  return true;
 }
 
 // ============================================================================
@@ -357,19 +387,58 @@ void primitive_update_aabb(Primitive *p)
     break;
 
   case PRIM_RECTANGLE:
-    /* TODO: Compute AABB for Rectangle
-     */
+    p->aabb.min.x = p->geom.rectangle.top_left.x;
+    p->aabb.min.y = p->geom.rectangle.top_left.y;
+    p->aabb.max.x = p->geom.rectangle.top_left.x + p->geom.rectangle.width;
+    p->aabb.max.y = p->geom.rectangle.top_left.y + p->geom.rectangle.height;
     break;
 
   case PRIM_SEGMENT:
-    /* TODO: Compute AABB for Segment
-     */
+    if (p->geom.segment.p1.x >= p->geom.segment.p2.x){
+      p->aabb.min.x = p->geom.segment.p2.x;
+      p->aabb.max.x = p->geom.segment.p1.x;
+    } else {
+      p->aabb.min.x = p->geom.segment.p1.x;
+      p->aabb.max.x = p->geom.segment.p2.x;
+    }
+
+    if (p->geom.segment.p1.y >= p->geom.segment.p2.y){
+      p->aabb.min.y = p->geom.segment.p2.y;
+      p->aabb.max.y = p->geom.segment.p1.y;
+    } else {
+      p->aabb.min.y = p->geom.segment.p1.y;
+      p->aabb.max.y = p->geom.segment.p2.y;
+    }
     break;
 
   case PRIM_POLYGON:
-    /* TODO: Compute AABB for Polygon
-     * Iterate vertices array to find min/max coordinates
-     */
+    if (p->geom.polygon.num_vertices == 0) {
+      p->aabb.min = (Point){0.0, 0.0};
+      p->aabb.max = (Point){0.0, 0.0};
+      break;                                            // caixa vazia em (0,0)-(0,0) para a flag ficar limpa
+    }
+    p->aabb.min = p->aabb.max = p->geom.polygon.vertices[0];
+
+    if (p->geom.polygon.num_vertices == 1) {
+      break;                                            // Não é necessário, aqui para simpificação
+    }
+
+    for (size_t i = 1; i < p->geom.polygon.num_vertices; i++)
+    {
+      if (p->aabb.min.x >= p->geom.polygon.vertices[i].x){
+        p->aabb.min.x = p->geom.polygon.vertices[i].x;
+      } 
+      if (p->aabb.max.x <= p->geom.polygon.vertices[i].x){
+        p->aabb.max.x = p->geom.polygon.vertices[i].x;
+      }
+
+      if (p->aabb.min.y >= p->geom.polygon.vertices[i].y){
+        p->aabb.min.y = p->geom.polygon.vertices[i].y;
+      } if(p->aabb.max.y <= p->geom.polygon.vertices[i].y) {
+        p->aabb.max.y = p->geom.polygon.vertices[i].y;
+      }
+    }
+      
     break;
   }
 
