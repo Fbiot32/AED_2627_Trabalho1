@@ -22,6 +22,7 @@
 
 #include "primitive_internal.h"
 
+#define TOLERANCE 0.5 // Distância máxima, em píxeis, a que um ponto ainda conta como estando sobre um segmento (≈ 1 píxel de espessura)
 // ============================================================================
 // HELPER GEOMETRIC MATH FUNCTIONS (PROVIDED)
 // ============================================================================
@@ -452,16 +453,37 @@ void primitive_translate(Primitive *p, double dx, double dy)
     return;
   }
 
-  /* TODO: Student Implementation
-   * Translate geometry based on p->type:
-   * - PRIM_CIRCLE: translate the center
-   * - PRIM_RECTANGLE: translate top-left vertex
-   * - PRIM_SEGMENT: translate both endpoints
-   * - PRIM_POLYGON: translate each vertex
-   * Set p->is_aabb_dirty = true
-   */
-  (void)dx;
-  (void)dy;
+  switch (p->type)
+  {
+  case PRIM_CIRCLE:
+    p->geom.circle.center.x += dx;
+    p->geom.circle.center.y += dy;
+    break;
+
+  case PRIM_RECTANGLE:
+    p->geom.rectangle.top_left.x += dx;
+    p->geom.rectangle.top_left.y += dy;
+    break;
+
+  case PRIM_SEGMENT:
+    p->geom.segment.p1.x += dx;
+    p->geom.segment.p1.y += dy;
+    p->geom.segment.p2.x += dx;
+    p->geom.segment.p2.y += dy;
+    break;
+
+  case PRIM_POLYGON:
+    for (size_t i = 0; i < p->geom.polygon.num_vertices; i++)
+    {
+      p->geom.polygon.vertices[i].x += dx;
+      p->geom.polygon.vertices[i].y += dy;
+    }
+      
+    break;
+  }
+
+  p->is_aabb_dirty = true;
+
 }
 
 void primitive_scale(Primitive *p, double factor)
@@ -471,15 +493,53 @@ void primitive_scale(Primitive *p, double factor)
     return;
   }
 
-  /* TODO: Student Implementation
-   * Scale geometry based on p->type:
-   * - PRIM_CIRCLE: radius *= factor
-   * - PRIM_RECTANGLE: width *= factor, height *= factor
-   * - PRIM_SEGMENT: scale endpoints relative to midpoint
-   * - PRIM_POLYGON: scale vertices relative to polygon bounding box center
-   * Set p->is_aabb_dirty = true
-   */
-  (void)factor;
+  switch (p->type)
+  {
+  case PRIM_CIRCLE:
+    p->geom.circle.radius *= factor;
+    break;
+
+  case PRIM_RECTANGLE:
+    p->geom.rectangle.height *= factor;             // Escalar relativo à origem que neste caso é o top_left
+    p->geom.rectangle.width *= factor;
+    break;
+
+  case PRIM_SEGMENT: {
+    Point pMedio;
+    // Encontrar o ponto médio
+    Point p1 = p->geom.segment.p1;
+    Point p2 = p->geom.segment.p2;
+    pMedio.x = (p1.x + p2.x) / 2;
+    pMedio.y = (p1.y + p2.y) / 2;
+    // Aumentar o x dos pontos cópia
+    p1.x = pMedio.x + (p1.x - pMedio.x) * factor;
+    p2.x = pMedio.x + (p2.x - pMedio.x) * factor;
+    // Aumentar o y dos pontos cópia
+    p1.y = pMedio.y + (p1.y - pMedio.y) * factor;
+    p2.y = pMedio.y + (p2.y - pMedio.y) * factor;
+    // Atribuir aos originais
+    p->geom.segment.p1 = p1;
+    p->geom.segment.p2 = p2;
+    break;
+  }
+  case PRIM_POLYGON: {
+    primitive_update_aabb(p);
+    // Encontrar o centro do aabb
+    Point pCentro;
+    pCentro.x = (p->aabb.max.x + p->aabb.min.x) / 2;
+    pCentro.y = (p->aabb.max.y + p->aabb.min.y) / 2;
+    // Aumentar os pontos à escala
+    for (size_t i = 0; i < p->geom.polygon.num_vertices; i++)
+    {
+      p->geom.polygon.vertices[i].x = pCentro.x + (p->geom.polygon.vertices[i].x - pCentro.x) * factor;
+      p->geom.polygon.vertices[i].y = pCentro.y + (p->geom.polygon.vertices[i].y - pCentro.y) * factor;
+    }    
+    break;
+  }
+  }
+
+  p->is_aabb_dirty = true;
+
 }
 
 bool primitive_contains_point(const Primitive *p, Point pt)
@@ -488,7 +548,7 @@ bool primitive_contains_point(const Primitive *p, Point pt)
   {
     return false;
   }
-
+  
   // Narrow-phase exact geometric test dispatch
   switch (p->type)
   {
@@ -497,19 +557,16 @@ bool primitive_contains_point(const Primitive *p, Point pt)
                                       p->geom.circle.radius, pt);
 
   case PRIM_RECTANGLE:
-    /* TODO: Does rectangle contain point?
-     */
-    return false;
+    return math_rect_contains_point(p->geom.rectangle.top_left,
+                                    p->geom.rectangle.width, p->geom.rectangle.height, pt);
 
   case PRIM_SEGMENT:
-    /* TODO: Does segment contain point?
-     */
-    return false;
+    return math_segment_contains_point(p->geom.segment.p1,
+                                       p->geom.segment.p2, TOLERANCE, pt);
 
   case PRIM_POLYGON:
-    /* TODO: Does polygon contain point?
-     */
-    return false;
+    return math_polygon_contains_point(p->geom.polygon.vertices,
+                                       p->geom.polygon.num_vertices, pt);
   }
 
   return false;
