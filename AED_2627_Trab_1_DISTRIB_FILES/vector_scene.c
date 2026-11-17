@@ -50,8 +50,7 @@ struct _VectorScene
 /**
  * @brief Helper to write an RGB pixel buffer to binary PPM file (P6 format).
  */
-static bool save_ppm_image(const char *filename, int width, int height,
-                           const uint8_t *pixel_buffer)
+static bool save_ppm_image(const char *filename, int width, int height, const uint8_t *pixel_buffer)
 {
   if (!filename || !pixel_buffer || width <= 0 || height <= 0)
   {
@@ -114,8 +113,7 @@ size_t vector_scene_get_count(const VectorScene *scene)
   return scene->count;
 }
 
-Primitive *vector_scene_get_primitive_by_index(const VectorScene *scene,
-                                               size_t index)
+Primitive *vector_scene_get_primitive_by_index(const VectorScene *scene, size_t index)
 {
   if (!scene || index >= scene->count)
   {
@@ -147,29 +145,35 @@ Primitive *vector_scene_get_primitive_by_id(const VectorScene *scene, int id)
 
 VectorScene *vector_scene_create(int width, int height, Color bg_color)
 {
+  // Validate width and height
   if (width <= 0 || height <= 0)
   {
     return NULL;
   }
 
-  // Allocate and initialize an empty scene
+  // Try to allocate and initialize an empty scene
   VectorScene *scene = malloc(sizeof *scene);
 
+  // Check if scene got space in memory
   if (scene == NULL)
   {
     return NULL;
   }
 
+  // Write drawing settings
   scene->width = width;
   scene->height = height;
   scene->bg_color = bg_color;
-  scene->count = 0;
+
+  // Prep for shapes
+  scene->count = 0; // No shapes (0)
   scene->capacity = INITIAL_SCENE_CAPACITY;
+  scene->next_auto_id = 0; // Start the shape id as 0
 
-  scene->next_auto_id = 0;
-
+  // Try to allocate space for the shapes
   scene->primitives = malloc(scene->capacity * sizeof *scene->primitives);
 
+  // If it fails to allocate for the capacity of the shapes
   if (scene->primitives == NULL)
   {
     free(scene);
@@ -181,14 +185,17 @@ VectorScene *vector_scene_create(int width, int height, Color bg_color)
 
 void vector_scene_destroy(VectorScene *scene)
 {
+
+  // Case where there's no scene to delete
   if (!scene)
   {
     return;
   }
 
+  // Delete shapes one by one inside the list of shapes
   for (size_t i = 0; i < scene->count; i++)
   {
-    primitive_destroy(scene->primitives[i]);
+    primitive_destroy(scene->primitives[i]); // From primitive.c
   }
 
   free(scene->primitives);
@@ -201,22 +208,42 @@ void vector_scene_destroy(VectorScene *scene)
 
 int vector_scene_add_primitive(VectorScene *scene, Primitive *p)
 {
-  if (!scene || !p)
+
+  if (scene == NULL || p == NULL)
   {
     return -1;
   }
 
-  /* TODO: Student Implementation
-   * 1. Check if scene->count == scene->capacity.
-   * 2. If full, expand capacity using realloc.
-   * 3. Auto-assign p->id if p->id < 0 using scene->next_auto_id++.
-   * 4. Append p to primitives array.
-   * 5. Call primitive_update_aabb(p).
-   * 6. Return assigned primitive ID.
-   * NOTE: Scene TAKES OWNERSHIP of pointer p (it no longer belongs to the
-   * client).
-   */
-  return -1;
+  // If the array is full, double the capacity
+  if (scene->count == scene->capacity)
+  {
+    size_t new_capacity = scene->capacity * 2;
+    Primitive **new_array = realloc(scene->primitives, new_capacity * sizeof *scene->primitives);
+
+    if (new_array == NULL)
+    {
+      return -1;
+    }
+
+    scene->primitives = new_array;
+    scene->capacity = new_capacity;
+  }
+
+  // A negative id asks the scene to assign an id
+  if (p->id < 0)
+  {
+    p->id = scene->next_auto_id;
+    scene->next_auto_id++;
+  }
+
+  // Store the shape's address in the next available space
+  scene->primitives[scene->count] = p;
+  scene->count++;
+
+  // Update bouding box
+  primitive_update_aabb(p);
+
+  return p->id;
 }
 
 bool vector_scene_remove_primitive(VectorScene *scene, int id)
@@ -226,9 +253,23 @@ bool vector_scene_remove_primitive(VectorScene *scene, int id)
     return false;
   }
 
-  /* TODO: Student Implementation
-   * 1. Do not forget to shif left remaining primitives, if needed.
-   */
+  for (size_t i = 0; i < scene->count; i++)
+  {
+    if (scene->primitives[i]->id == id)
+    {
+      primitive_destroy(scene->primitives[i]);
+
+      for (size_t j = i + 1; j < scene->count; j++)
+      {
+        scene->primitives[j - 1] = scene->primitives[j];
+      }
+
+      scene->count--;
+      scene->primitives[scene->count] = NULL;
+      return true;
+    }
+  }
+
   return false;
 }
 
@@ -280,8 +321,7 @@ bool vector_scene_set_z_index(VectorScene *scene, int id, int new_z_index)
  * @param count Number of elements in the array.
  * @param stats Pointer to SortStats structure to record performance metrics.
  */
-static void insertion_sort_by_z(Primitive **arr, size_t count,
-                                SortStats *stats)
+static void insertion_sort_by_z(Primitive **arr, size_t count, SortStats *stats)
 {
   // TODO: Implement Insertion Sort by z_index
   // - Handle edge cases (count < 2).
@@ -310,8 +350,7 @@ static void insertion_sort_by_z(Primitive **arr, size_t count,
  * @param right Ending index of the second subarray.
  * @param stats Pointer to SortStats structure to track metrics (can be NULL).
  */
-static void merge_by_z(Primitive **arr, Primitive **temp_arr, size_t left,
-                       size_t mid, size_t right, SortStats *stats)
+static void merge_by_z(Primitive **arr, Primitive **temp_arr, size_t left, size_t mid, size_t right, SortStats *stats)
 {
   // TODO: Implement Merge step for MergeSort
   // - Merge sorted halves [left..mid] and [mid+1..right] into temp_arr.
@@ -339,8 +378,7 @@ static void merge_by_z(Primitive **arr, Primitive **temp_arr, size_t left,
  * @param right Ending index of the subarray to sort.
  * @param stats Pointer to SortStats structure to record performance metrics.
  */
-static void merge_sort_by_z(Primitive **arr, Primitive **temp_arr, size_t left,
-                            size_t right, SortStats *stats)
+static void merge_sort_by_z(Primitive **arr, Primitive **temp_arr, size_t left, size_t right, SortStats *stats)
 {
   // TODO: Implement recursive MergeSort
   // - Base case: if left >= right, return.
@@ -355,8 +393,7 @@ static void merge_sort_by_z(Primitive **arr, Primitive **temp_arr, size_t left,
   (void)stats;
 }
 
-void vector_scene_sort_by_z(VectorScene *scene, bool use_fast_sort,
-                            SortStats *stats)
+void vector_scene_sort_by_z(VectorScene *scene, bool use_fast_sort, SortStats *stats)
 {
   if (scene == NULL || scene->count < 2)
     return;
@@ -372,8 +409,7 @@ void vector_scene_sort_by_z(VectorScene *scene, bool use_fast_sort,
   (void)stats;
 }
 
-Primitive *vector_scene_pick_top_primitive(const VectorScene *scene, Point pt,
-                                           bool is_opt, PickStats *stats)
+Primitive *vector_scene_pick_top_primitive(const VectorScene *scene, Point pt, bool is_opt, PickStats *stats)
 {
   if (!scene)
   {
@@ -396,8 +432,7 @@ Primitive *vector_scene_pick_top_primitive(const VectorScene *scene, Point pt,
 // RENDERING / RASTERIZATION (STUDENTS MUST COMPLETE)
 // ============================================================================
 
-bool vector_scene_render(const VectorScene *scene,
-                         const char *output_filename)
+bool vector_scene_render(const VectorScene *scene, const char *output_filename)
 {
   if (!scene || !output_filename)
   {
