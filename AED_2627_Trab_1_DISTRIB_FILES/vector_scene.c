@@ -284,12 +284,16 @@ bool vector_scene_translate_primitive(VectorScene *scene, int id, double dx, dou
     return false;
   }
 
-  /* TODO: Student Implementation
-   */
-  (void)id;
-  (void)dx;
-  (void)dy;
-  return false;
+  Primitive *p = vector_scene_get_primitive_by_id(scene, id);
+  if (p == NULL)
+  {
+    return false;
+  }
+
+  primitive_translate(p, dx, dy);
+  primitive_update_aabb(p);
+
+  return true;
 }
 
 bool vector_scene_set_z_index(VectorScene *scene, int id, int new_z_index)
@@ -299,11 +303,14 @@ bool vector_scene_set_z_index(VectorScene *scene, int id, int new_z_index)
     return false;
   }
 
-  /* TODO: Student Implementation
-   */
-  (void)id;
-  (void)new_z_index;
-  return false;
+  Primitive *p = vector_scene_get_primitive_by_id(scene, id);
+  if (p == NULL)
+  {
+    return false;
+  }
+
+  p->z_index = new_z_index;
+  return true;
 }
 
 // ============================================================================
@@ -321,6 +328,7 @@ bool vector_scene_set_z_index(VectorScene *scene, int id, int new_z_index)
  * @param count Number of elements in the array.
  * @param stats Pointer to SortStats structure to record performance metrics.
  */
+
 static void insertion_sort_by_z(Primitive **arr, size_t count, SortStats *stats)
 {
   // TODO: Implement Insertion Sort by z_index
@@ -350,6 +358,7 @@ static void insertion_sort_by_z(Primitive **arr, size_t count, SortStats *stats)
  * @param right Ending index of the second subarray.
  * @param stats Pointer to SortStats structure to track metrics (can be NULL).
  */
+
 static void merge_by_z(Primitive **arr, Primitive **temp_arr, size_t left, size_t mid, size_t right, SortStats *stats)
 {
   // TODO: Implement Merge step for MergeSort
@@ -378,6 +387,7 @@ static void merge_by_z(Primitive **arr, Primitive **temp_arr, size_t left, size_
  * @param right Ending index of the subarray to sort.
  * @param stats Pointer to SortStats structure to record performance metrics.
  */
+
 static void merge_sort_by_z(Primitive **arr, Primitive **temp_arr, size_t left, size_t right, SortStats *stats)
 {
   // TODO: Implement recursive MergeSort
