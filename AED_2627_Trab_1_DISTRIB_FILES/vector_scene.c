@@ -331,17 +331,48 @@ bool vector_scene_set_z_index(VectorScene *scene, int id, int new_z_index)
 
 static void insertion_sort_by_z(Primitive **arr, size_t count, SortStats *stats)
 {
-  // TODO: Implement Insertion Sort by z_index
-  // - Handle edge cases (count < 2).
-  // - Iterate through elements from index 1 to count - 1.
-  // - Compare arr[j]->z_index with key->z_index.
-  // - Increment stats->comparisons for every z_index comparison made.
-  // - Shift elements right and increment stats->swaps for every move.
-  // - Insert key in its correct sorted position.
 
-  (void)arr;
-  (void)count;
-  (void)stats;
+  if (arr == NULL || count < 2)
+  {
+    return;
+  }
+
+  for (size_t i = 1; i < count; i++)
+  {
+
+    Primitive *key = arr[i];
+    size_t j = i;
+
+    while (j > 0)
+    {
+      if (stats != NULL)
+      {
+        stats->comparisons++;
+      }
+
+      if (arr[j - 1]->z_index <= key->z_index)
+      {
+        break;
+      }
+
+      arr[j] = arr[j - 1];
+      if (stats != NULL)
+      {
+        stats->swaps++;
+      }
+      j--;
+    }
+
+    if (j != i)
+    {
+      arr[j] = key;
+
+      if (stats != NULL)
+      {
+        stats->swaps++;
+      }
+    }
+  }
 }
 
 /**
@@ -361,18 +392,58 @@ static void insertion_sort_by_z(Primitive **arr, size_t count, SortStats *stats)
 
 static void merge_by_z(Primitive **arr, Primitive **temp_arr, size_t left, size_t mid, size_t right, SortStats *stats)
 {
-  // TODO: Implement Merge step for MergeSort
-  // - Merge sorted halves [left..mid] and [mid+1..right] into temp_arr.
-  // - Compare z_index of primitives and increment stats->comparisons.
-  // - Increment stats->swaps when copying elements to temp_arr and back to arr.
-  // - Copy merged elements back from temp_arr to arr[left..right].
+  size_t i = left;    // Next shape left half
+  size_t j = mid + 1; // Next shape right half
+  size_t k = left;    // Next free position temp_arr
 
-  (void)arr;
-  (void)temp_arr;
-  (void)left;
-  (void)mid;
-  (void)right;
-  (void)stats;
+  while (i <= mid && j <= right)
+  {
+    if (stats != NULL)
+    {
+      stats->comparisons++;
+    }
+
+    if (arr[i]->z_index <= arr[j]->z_index)
+    {
+      temp_arr[k++] = arr[i++];
+    }
+    else
+    {
+      temp_arr[k++] = arr[j++];
+    }
+
+    if (stats != NULL)
+    {
+      stats->swaps++;
+    }
+  }
+
+  while (i <= mid)
+  {
+    temp_arr[k++] = arr[i++];
+    if (stats != NULL)
+    {
+      stats->swaps++;
+    }
+  }
+
+  while (j <= right)
+  {
+    temp_arr[k++] = arr[j++];
+    if (stats != NULL)
+    {
+      stats->swaps++;
+    }
+  }
+
+  for (size_t pos = left; pos <= right; pos++)
+  {
+    arr[pos] = temp_arr[pos];
+    if (stats != NULL)
+    {
+      stats->swaps++;
+    }
+  }
 }
 
 /**
@@ -390,52 +461,109 @@ static void merge_by_z(Primitive **arr, Primitive **temp_arr, size_t left, size_
 
 static void merge_sort_by_z(Primitive **arr, Primitive **temp_arr, size_t left, size_t right, SortStats *stats)
 {
-  // TODO: Implement recursive MergeSort
-  // - Base case: if left >= right, return.
-  // - Calculate mid = left + (right - left) / 2.
-  // - Recursively call merge_sort_by_z for [left..mid] and [mid+1..right].
-  // - Call merge_by_z to merge the two sorted halves.
 
-  (void)arr;
-  (void)temp_arr;
-  (void)left;
-  (void)right;
-  (void)stats;
+  if (left >= right)
+  {
+    return;
+  }
+
+  size_t mid = left + (right - left) / 2;
+
+  merge_sort_by_z(arr, temp_arr, left, mid, stats);
+  merge_sort_by_z(arr, temp_arr, mid + 1, right, stats);
+  merge_by_z(arr, temp_arr, left, mid, right, stats);
 }
 
 void vector_scene_sort_by_z(VectorScene *scene, bool use_fast_sort, SortStats *stats)
 {
   if (scene == NULL || scene->count < 2)
+  {
     return;
+  }
 
-  /* TODO: Student Implementation & Benchmark Study
-   * Reset stats (comparisons = 0, swaps = 0).
-   * If use_fast_sort is false: execute O(N^2) sort (Insertion Sort).
-   * If use_fast_sort is true: execute O(N log N) sort (MergeSort).
-   * Increment stats->comparisons and stats->swaps on every check/swap!
-   */
+  if (stats != NULL)
+  {
+    stats->comparisons = 0;
+    stats->swaps = 0;
+  }
 
-  (void)use_fast_sort;
-  (void)stats;
+  if (scene == NULL || scene->count < 2)
+  {
+    return;
+  }
+
+  if (!use_fast_sort)
+  {
+    insertion_sort_by_z(scene->primitives, scene->count, stats);
+    return;
+  }
+
+  Primitive **temp_arr = malloc(scene->count * sizeof *temp_arr);
+  if (temp_arr == NULL)
+  {
+    return;
+  }
+
+  merge_sort_by_z(scene->primitives, temp_arr, 0, scene->count - 1, stats);
+  free(temp_arr);
 }
 
 Primitive *vector_scene_pick_top_primitive(const VectorScene *scene, Point pt, bool is_opt, PickStats *stats)
 {
-  if (!scene)
+  if (stats != NULL)
+  {
+    stats->aabb_tests = 0;
+    stats->exact_tests = 0;
+  }
+
+  if (scene == NULL)
   {
     return NULL;
   }
 
-  /* TODO: Student Implementation & Benchmark Study
-   * Reset stats (aabb_tests = 0, exact_tests = 0).
-   * Iterate primitives backward from top layer (highest z_index) to lowest.
-   * Phase 1 (Broad-phase): AABB check (increment stats->aabb_tests++).
-   * Phase 2 (Narrow-phase): Exact check primitive_contains_point
-   * (increment stats->exact_tests++). Return topmost matching primitive.
-   */
-  (void)pt;
-  (void)stats;
-  return NULL;
+  Primitive *top = NULL;
+
+  for (size_t i = scene->count; i > 0; i--)
+  {
+    Primitive *p = scene->primitives[i - 1];
+
+    if (p == NULL || p->alpha <= 0.0)
+    {
+      continue;
+    }
+
+    if (is_opt)
+    {
+      BoundingBox box = primitive_get_aabb(p);
+
+      // match 0.5 tolerance
+      double margin = (p->type == PRIM_SEGMENT) ? 0.5 : 0.0;
+
+      if (stats != NULL)
+      {
+        stats->aabb_tests++;
+      }
+
+      if (pt.x < box.min.x - margin || pt.x > box.max.x + margin ||
+          pt.y < box.min.y - margin || pt.y > box.max.y + margin)
+      {
+        continue;
+      }
+    }
+
+    if (stats != NULL)
+    {
+      stats->exact_tests++;
+    }
+
+    if (primitive_contains_point(p, pt) &&
+        (top == NULL || p->z_index > top->z_index))
+    {
+      top = p;
+    }
+  }
+
+  return top;
 }
 
 // ============================================================================
