@@ -572,25 +572,130 @@ Primitive *vector_scene_pick_top_primitive(const VectorScene *scene, Point pt, b
 
 bool vector_scene_render(const VectorScene *scene, const char *output_filename)
 {
+
   if (!scene || !output_filename)
   {
     return false;
   }
 
-  /* TODO: Student Implementation & Benchmark Study
-   * 1. Allocate pixel buffer (width * height * 3) and fill bg_color.
-   * 2. Sort primitives by ascending z_index (Painter's Algorithm).
-   * 3. For each primitive:
-   *    a) Update AABB.
-   *    b) Clip pixel bounds [xMin..xMax] x [yMin..yMax] against
-   *       [0..widht-1] x [0..height-1]
-   *    c) For each pixel in the clipped domain
-   *    d) Test primitive_contains_point(p, pixel_center).
-   *    e) Perform Alpha Blending compositing.
-   * 4. Call save_ppm_image(output_filename, width, height, pixel_buffer).
-   * 5. Free buffers and return true.
-   */
-  return false;
+  if (scene == NULL || output_filename == NULL || scene->width <= 0 || scene->height <= 0)
+  {
+    return false;
+  }
+
+  size_t width = (size_t)scene->width;
+  size_t height = (size_t)scene->height;
+
+  if (width > SIZE_MAX / height / 3)
+  {
+    return false;
+  }
+
+  size_t pixel_count = width * height;
+  uint8_t *pixels = malloc(pixel_count * 3);
+
+  if (pixels == NULL)
+  {
+    return false;
+  }
+
+  // The canvas filled with the background color
+  for (size_t i = 0; i < pixel_count; i++)
+  {
+    pixels[i * 3] = scene->bg_color.r;
+    pixels[i * 3 + 1] = scene->bg_color.g;
+    pixels[i * 3 + 2] = scene->bg_color.b;
+  }
+
+  Primitive **ordered = NULL;
+
+  if (scene->count > 0)
+  {
+
+    if (scene->count > SIZE_MAX / sizeof *ordered)
+    {
+      free(pixels);
+      return false;
+    }
+
+    ordered = malloc(scene->count * sizeof *ordered);
+    if (ordered == NULL)
+    {
+      free(pixels);
+      return false;
+    }
+
+    memcpy(ordered, scene->primitives, scene->count * sizeof *ordered);
+
+    if (scene->count > 1)
+    {
+      Primitive **temp = malloc(scene->count * sizeof *temp);
+      if (temp == NULL)
+      {
+        free(ordered);
+        free(pixels);
+        return false;
+      }
+
+      merge_sort_by_z(ordered, temp, 0, scene->count - 1, NULL);
+      free(temp);
+    }
+  }
+
+  // Draw the shapes over the pixels already in buffer
+  for (size_t i = 0; i < scene->count; i++)
+  {
+    Primitive *p = ordered[i];
+
+    if (p == NULL || !(p->alpha > 0.0) || p->alpha > 1.0)
+    {
+      continue;
+    }
+
+    BoundingBox box = primitive_get_aabb(p);
+    double margin = (p->type == PRIM_SEGMENT) ? 0.5 : 0.0;
+    double x_min = floor(box.min.x - margin);
+    double x_max = ceil(box.max.x + margin);
+    double y_min = floor(box.min.y - margin);
+    double y_max = ceil(box.max.y + margin);
+
+    // Skip a shape if its bounding box is outside the canvas
+    if (!(x_min < (double)width && x_max >= 0.0 && y_min < (double)height && y_max >= 0.0))
+    {
+      continue;
+    }
+
+    size_t first_x = (size_t)fmax(0.0, x_min);
+    size_t last_x = (size_t)fmin((double)(width - 1), x_max);
+    size_t first_y = (size_t)fmax(0.0, y_min);
+    size_t last_y = (size_t)fmin((double)(height - 1), y_max);
+
+    for (size_t y = first_y; y <= last_y; y++)
+    {
+      for (size_t x = first_x; x <= last_x; x++)
+      {
+        Point center = {(double)x + 0.5, (double)y + 0.5};
+
+        if (!primitive_contains_point(p, center))
+        {
+          continue;
+        }
+
+        size_t at = (y * width + x) * 3;
+        double alpha = p->alpha;
+
+        pixels[at] = (uint8_t)(alpha * p->color.r + (1.0 - alpha) * pixels[at] + 0.5);
+        pixels[at + 1] = (uint8_t)(alpha * p->color.g + (1.0 - alpha) * pixels[at + 1] + 0.5);
+        pixels[at + 2] = (uint8_t)(alpha * p->color.b + (1.0 - alpha) * pixels[at + 2] + 0.5);
+      }
+    }
+  }
+
+  bool saved = save_ppm_image(output_filename, scene->width, scene->height, pixels);
+
+  free(ordered);
+  free(pixels);
+  return saved;
 }
 
 // ============================================================================
