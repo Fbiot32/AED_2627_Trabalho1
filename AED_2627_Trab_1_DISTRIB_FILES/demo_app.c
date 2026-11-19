@@ -27,7 +27,8 @@
 // HELPER PRINT FUNCTIONS
 // ============================================================================
 
-static void print_banner(const char* title) {
+static void print_banner(const char *title)
+{
   printf(
       "\n===================================================================="
       "\n");
@@ -37,13 +38,15 @@ static void print_banner(const char* title) {
       "\n");
 }
 
-static void print_primitive_info(const Primitive* p) {
-  if (p == NULL) {
+static void print_primitive_info(const Primitive *p)
+{
+  if (p == NULL)
+  {
     printf("  [Primitive] NULL\n");
     return;
   }
 
-  const char* type_names[] = {"Circle", "Rectangle", "Segment", "Polygon"};
+  const char *type_names[] = {"Circle", "Rectangle", "Segment", "Polygon"};
   Color rgb = primitive_get_color(p);
   printf(
       "  [Primitive ID %d] Type: %s | Z-Index: %d | Color: (%d, %d, %d) | "
@@ -56,14 +59,16 @@ static void print_primitive_info(const Primitive* p) {
 // MAIN APPLICATION
 // ============================================================================
 
-int main(void) {
+int main(void)
+{
   print_banner("1. PROGRAMMATIC SCENE CREATION");
 
-  // Canvas 800x600 with light sky blue background (210, 235, 250)
-  Color bg_sky = {210, 235, 250};
-  VectorScene* scene = vector_scene_create(800, 600, bg_sky);
+  // Canvas 800x600 with dark sky blue background
+  Color bg_sky = {10, 10, 40};
+  VectorScene *scene = vector_scene_create(800, 600, bg_sky);
 
-  if (scene == NULL) {
+  if (scene == NULL)
+  {
     fprintf(stderr, "Error: Failed to create vector scene.\n");
     return EXIT_FAILURE;
   }
@@ -72,93 +77,260 @@ int main(void) {
          vector_scene_get_width(scene), vector_scene_get_height(scene),
          bg_sky.r, bg_sky.g, bg_sky.b);
 
+  // ====================================
   // 1. Green Grass Ground (Rectangle)
-  Color green_grass = {34, 139, 34};
+  // ====================================
+
+  Color green_grass = {10, 100, 34};
   Point ground_top_left = {0.0, 400.0};
-  Primitive* ground = primitive_create_rectangle(-1, ground_top_left, 800.0,
-                                                 200.0, green_grass, 1.0, 1);
+  Primitive *ground = primitive_create_rectangle(
+      -1,
+      ground_top_left,
+      800.0,
+      200.0,
+      green_grass,
+      1.0,
+      1);
   vector_scene_add_primitive(scene, ground);
 
-  // 2. Yellow Sun (Circle)
-  Color yellow_sun = {255, 215, 0};
-  Point sun_center = {680.0, 120.0};
-  Primitive* sun =
-      primitive_create_circle(-1, sun_center, 65.0, yellow_sun, 0.9, 2);
-  vector_scene_add_primitive(scene, sun);
+  // ====================================
+  // 2. Grey moon (Circle)
+  // ====================================
 
-  // 3. Sun Rays (Line Segments)
-  Primitive* ray1 = primitive_create_segment(
-      -1, (Point){680.0, 120.0}, (Point){580.0, 180.0}, yellow_sun, 0.4, 1);
-  Primitive* ray2 = primitive_create_segment(
-      -1, (Point){680.0, 120.0}, (Point){680.0, 240.0}, yellow_sun, 0.4, 1);
-  vector_scene_add_primitive(scene, ray1);
-  vector_scene_add_primitive(scene, ray2);
+  Color grey_moon = {220, 220, 220};
+  Point moon_center = {680.0, 120.0};
+  Primitive *moon = primitive_create_circle(
+      -1,
+      moon_center,
+      65.0,
+      grey_moon,
+      0.9,
+      2);
+  vector_scene_add_primitive(scene, moon);
 
-  // 4. Clouds (Semi-transparent Overlapping Circles)
-  Color white_cloud = {255, 255, 255};
-  Primitive* c1 = primitive_create_circle(-1, (Point){200.0, 120.0}, 45.0,
-                                          white_cloud, 0.75, 3);
-  Primitive* c2 = primitive_create_circle(-1, (Point){240.0, 110.0}, 55.0,
-                                          white_cloud, 0.85, 3);
-  Primitive* c3 = primitive_create_circle(-1, (Point){280.0, 120.0}, 45.0,
-                                          white_cloud, 0.75, 3);
-  vector_scene_add_primitive(scene, c1);
-  vector_scene_add_primitive(scene, c2);
-  vector_scene_add_primitive(scene, c3);
+  // Moon Cover
+  Point moon_cover_center = {700, 100};
+  Primitive *moon_over = primitive_create_circle(
+      -1,
+      moon_cover_center,
+      65,
+      bg_sky,
+      0.95,
+      4);
+  vector_scene_add_primitive(scene, moon_over);
 
-  // 5. House Body (Beige Rectangle)
-  Color house_beige = {222, 184, 135};
-  Primitive* house = primitive_create_rectangle(
-      -1, (Point){300.0, 320.0}, 200.0, 150.0, house_beige, 1.0, 4);
-  vector_scene_add_primitive(scene, house);
+  // ==================================
+  // 3. Moon craters
+  // ==================================
 
-  // 6. House Roof (Red Triangular Polygon)
-  Color red_roof = {178, 34, 34};
-  Primitive* roof = primitive_create_polygon(-1, red_roof, 1.0, 5);
-  polygon_add_vertex(roof, (Point){280.0, 320.0});
-  polygon_add_vertex(roof, (Point){520.0, 320.0});
-  polygon_add_vertex(roof, (Point){400.0, 220.0});
-  int roof_id = vector_scene_add_primitive(scene, roof);
+  Color dark_crater = {150, 150, 150};
 
-  // 7. House Door and Window
-  Color brown_door = {139, 69, 19};
-  Primitive* door = primitive_create_rectangle(-1, (Point){375.0, 390.0}, 50.0,
-                                               80.0, brown_door, 1.0, 6);
-  vector_scene_add_primitive(scene, door);
+  // 1
+  Point crater_1_center = {624.0, 116.0};
+  Primitive *crater_1 = primitive_create_circle(
+      -1,
+      crater_1_center,
+      5.0,
+      dark_crater,
+      1,
+      3);
+  vector_scene_add_primitive(scene, crater_1);
 
-  Color blue_glass = {135, 206, 250};
-  Primitive* window = primitive_create_rectangle(
-      -1, (Point){330.0, 350.0}, 40.0, 40.0, blue_glass, 0.75, 6);
-  vector_scene_add_primitive(scene, window);
+  // 2
+  Point crater_2_center = {640.0, 128.0};
+  Primitive *crater_2 = primitive_create_circle(
+      -1,
+      crater_2_center,
+      10.0,
+      dark_crater,
+      1,
+      3);
+  vector_scene_add_primitive(scene, crater_2);
 
-  // 8. Decorative Star (5-Vertex Polygon)
-  Color purple_star = {238, 130, 238};
-  Primitive* star = primitive_create_polygon(-1, purple_star, 0.8, 10);
-  polygon_add_vertex(star, (Point){600.0, 350.0});
-  polygon_add_vertex(star, (Point){630.0, 420.0});
-  polygon_add_vertex(star, (Point){550.0, 380.0});
-  polygon_add_vertex(star, (Point){650.0, 380.0});
-  polygon_add_vertex(star, (Point){570.0, 420.0});
-  vector_scene_add_primitive(scene, star);
+  // 3
+  Point crater_3_center = {670.0, 170.0};
+  Primitive *crater_3 = primitive_create_circle(
+      -1,
+      crater_3_center,
+      8.0,
+      dark_crater,
+      1,
+      3);
+  vector_scene_add_primitive(scene, crater_3);
 
+  // ==================================
+  // 4. House Body (Beige Rectangle)
+  // ==================================
+
+  // Main
+  Color house_color = {165, 163, 145};
+  Primitive *house = primitive_create_rectangle(
+      -1,
+      (Point){300.0, 320.0},
+      200.0,
+      150.0,
+      house_color,
+      1.0,
+      2);
+  int house_id = vector_scene_add_primitive(scene, house);
+
+  // Garage
+  Primitive *garage = primitive_create_rectangle(
+      -1,
+      (Point){500.0, 380.0},
+      100.0, 90.0,
+      house_color,
+      1.0,
+      2);
+  vector_scene_add_primitive(scene, garage);
+
+  // ==================================
+  // 6. Roofs
+  // ==================================
+
+  Color roof_color = {178, 34, 34};
+
+  // House Roof (Red Triangular Polygon)
+  Primitive *house_roof = primitive_create_polygon(
+      -1,
+      roof_color,
+      1.0,
+      2);
+  polygon_add_vertex(house_roof, (Point){280.0, 320.0});
+  polygon_add_vertex(house_roof, (Point){520.0, 320.0});
+  polygon_add_vertex(house_roof, (Point){400.0, 220.0});
+  int roof_id = vector_scene_add_primitive(scene, house_roof);
+
+  // Fix:
+  // Garage Roof
+  // Primitive *garage_roof = primitive_create_polygon(
+  //     -1,
+  //     roof_color,
+  //     1.0,
+  //     50);
+  // polygon_add_vertex(garage_roof, (Point){400, 400});
+  // polygon_add_vertex(garage_roof, (Point){500, 500});
+  // polygon_add_vertex(garage_roof, (Point){600, 600});
+  // vector_scene_add_primitive(scene, garage_roof);
+
+  // =====================================
+  // 7. House Doors and Window
+  // =====================================
+
+  // Main Door
+  Color main_door_color = {139, 69, 19};
+  Primitive *main_door = primitive_create_rectangle(
+      -1,
+      (Point){380.0, 410.0},
+      40.0,
+      60.0,
+      main_door_color,
+      1.0,
+      3);
+  vector_scene_add_primitive(scene, main_door);
+
+  // Main Door Handle
+  Color main_door_handle_color = {100, 20, 10};
+  Primitive *main_door_handle = primitive_create_circle(
+      -1,
+      (Point){410, 445},
+      3,
+      main_door_handle_color,
+      1.0,
+      4);
+  vector_scene_add_primitive(scene, main_door_handle);
+
+  // Garage Door
+  Color garage_door_color = {40, 40, 40};
+  Primitive *garage_door = primitive_create_rectangle(
+      -1,
+      (Point){510.0, 410.0},
+      80,
+      60,
+      garage_door_color, 1.0,
+      3);
+  vector_scene_add_primitive(scene, garage_door);
+
+  // Garage Door Handle
+  Color garage_door_handle_color = {20, 20, 20};
+  Primitive *garage_door_handle = primitive_create_circle(
+      -1,
+      (Point){550, 465},
+      3,
+      garage_door_handle_color,
+      1.0,
+      4);
+  vector_scene_add_primitive(scene, garage_door_handle);
+
+  // Windows
+  Color window_color = {135, 206, 250};
+  Color window_div_color = {220, 220, 220};
+
+  // Window left
+  Primitive *window_left = primitive_create_rectangle(
+      -1,
+      (Point){330.0, 350.0},
+      40.0,
+      40.0,
+      window_color,
+      0.75,
+      3);
+  vector_scene_add_primitive(scene, window_left);
+
+  // Window left division
+  Primitive *window_left_div = primitive_create_segment(
+      -1,
+      (Point){350, 350},
+      (Point){350, 390},
+      window_div_color,
+      1.0,
+      4);
+  vector_scene_add_primitive(scene, window_left_div);
+
+  // Window right
+  Primitive *window_right = primitive_create_rectangle(
+      -1,
+      (Point){430.0, 350.0},
+      40.0,
+      40.0,
+      window_color,
+      0.75,
+      3);
+  vector_scene_add_primitive(scene, window_right);
+
+  // Window right division
+  Primitive *window_right_div = primitive_create_segment(
+      -1,
+      (Point){450, 350},
+      (Point){450, 390},
+      window_div_color,
+      1.0,
+      4);
+  vector_scene_add_primitive(scene, window_right_div);
   printf("Added %zu primitives to scene.\n", vector_scene_get_count(scene));
 
   print_banner("2. SAVING SCENE TO TEXT FILE AND RASTERING TO PPM IMAGE");
 
-  const char* created_text_file = "created_scene.vsc";
-  const char* created_image_file = "created_scene.ppm";
+  const char *created_text_file = "created_scene.vsc";
+  const char *created_image_file = "created_scene.ppm";
 
-  if (vector_scene_save_text(scene, created_text_file)) {
+  if (vector_scene_save_text(scene, created_text_file))
+  {
     printf("Successfully saved scene configuration to text file: '%s'\n",
            created_text_file);
-  } else {
+  }
+  else
+  {
     fprintf(stderr, "Error: Failed to save scene text file.\n");
   }
 
-  if (vector_scene_render(scene, created_image_file)) {
+  if (vector_scene_render(scene, created_image_file))
+  {
     printf("Successfully rendered raster image file: '%s' (PPM format)\n",
            created_image_file);
-  } else {
+  }
+  else
+  {
     fprintf(stderr, "Error: Failed to render raster image file.\n");
   }
 
@@ -170,8 +342,9 @@ int main(void) {
   print_banner("3. LOADING SCENE FROM FILE AND MANIPULATING OBJECTS");
 
   // Load scene from file
-  VectorScene* loaded_scene = vector_scene_load_text(created_text_file);
-  if (loaded_scene == NULL) {
+  VectorScene *loaded_scene = vector_scene_load_text(created_text_file);
+  if (loaded_scene == NULL)
+  {
     fprintf(stderr, "Error: Failed to load scene from file '%s'.\n",
             created_text_file);
     return EXIT_FAILURE;
@@ -185,9 +358,9 @@ int main(void) {
   // Demonstration of Spatial Selection (Picking)
   print_banner("4. SPATIAL SELECTION (PICKING)");
 
-  Point pick_pt1 = {400.0, 250.0};  // Point inside the roof
+  Point pick_pt1 = {400.0, 250.0}; // Point inside the roof
   PickStats pick_stats = {0, 0};
-  Primitive* picked1 = vector_scene_pick_top_primitive(loaded_scene, pick_pt1,
+  Primitive *picked1 = vector_scene_pick_top_primitive(loaded_scene, pick_pt1,
                                                        true, &pick_stats);
 
   printf("Testing pick at Point (%.1f, %.1f):\n", pick_pt1.x, pick_pt1.y);
@@ -197,8 +370,8 @@ int main(void) {
       "Narrow-Phase Tests: %lu\n",
       pick_stats.aabb_tests, pick_stats.exact_tests);
 
-  Point pick_pt2 = {680.0, 120.0};  // Point inside the sun
-  Primitive* picked2 = vector_scene_pick_top_primitive(loaded_scene, pick_pt2,
+  Point pick_pt2 = {680.0, 120.0}; // Point inside the sun
+  Primitive *picked2 = vector_scene_pick_top_primitive(loaded_scene, pick_pt2,
                                                        true, &pick_stats);
 
   printf("\nTesting pick at Point (%.1f, %.1f):\n", pick_pt2.x, pick_pt2.y);
@@ -212,12 +385,14 @@ int main(void) {
   print_banner("5. TRANSFORMATIONS, Z-INDEX UPDATES AND SORTING");
 
   // Translate roof ID
-  if (vector_scene_translate_primitive(loaded_scene, roof_id, 0.0, -20.0)) {
+  if (vector_scene_translate_primitive(loaded_scene, roof_id, 0.0, -20.0))
+  {
     printf("Translated roof (ID %d) by dy = -20.0 pixels.\n", roof_id);
   }
 
   // Change house Z-Index
-  if (vector_scene_set_z_index(loaded_scene, 9, 8)) {
+  if (vector_scene_set_z_index(loaded_scene, house_id - 1, 10))
+  {
     printf("Updated house body (ID 9) z-index to 8.\n");
   }
 
@@ -230,16 +405,18 @@ int main(void) {
 
   print_banner("6. SAVING AND RENDERING MODIFIED SCENE");
 
-  const char* mod_text_file = "modified_scene.vsc";
-  const char* mod_image_file = "modified_scene.ppm";
+  const char *mod_text_file = "modified_scene.vsc";
+  const char *mod_image_file = "modified_scene.ppm";
 
-  if (vector_scene_save_text(loaded_scene, mod_text_file)) {
+  if (vector_scene_save_text(loaded_scene, mod_text_file))
+  {
     printf(
         "Successfully saved modified scene configuration to text file: '%s'\n",
         mod_text_file);
   }
 
-  if (vector_scene_render(loaded_scene, mod_image_file)) {
+  if (vector_scene_render(loaded_scene, mod_image_file))
+  {
     printf("Successfully rendered modified raster image file: '%s'\n",
            mod_image_file);
   }
