@@ -22,6 +22,7 @@
 
 #include "primitive_internal.h"
 
+#define TOLERANCE 0.5 // Distância máxima, em píxeis, a que um ponto ainda conta como estando sobre um segmento (≈ 1 píxel de espessura)
 // ============================================================================
 // CONCRETE STRUCT LAYOUT (OPAQUE ADT)
 // ============================================================================
@@ -234,6 +235,13 @@ int vector_scene_add_primitive(VectorScene *scene, Primitive *p)
   {
     p->id = scene->next_auto_id;
     scene->next_auto_id++;
+  }
+  else
+  {
+    if (p->id >= scene->next_auto_id)
+    {
+      scene->next_auto_id = p->id + 1;
+    }
   }
 
   // Store the shape's address in the next available space
@@ -476,10 +484,6 @@ static void merge_sort_by_z(Primitive **arr, Primitive **temp_arr, size_t left, 
 
 void vector_scene_sort_by_z(VectorScene *scene, bool use_fast_sort, SortStats *stats)
 {
-  if (scene == NULL || scene->count < 2)
-  {
-    return;
-  }
 
   if (stats != NULL)
   {
@@ -536,8 +540,8 @@ Primitive *vector_scene_pick_top_primitive(const VectorScene *scene, Point pt, b
     {
       BoundingBox box = primitive_get_aabb(p);
 
-      // match 0.5 tolerance
-      double margin = (p->type == PRIM_SEGMENT) ? 0.5 : 0.0;
+      
+      double margin = (p->type == PRIM_SEGMENT) ? TOLERANCE : 0.0;
 
       if (stats != NULL)
       {
@@ -653,7 +657,7 @@ bool vector_scene_render(const VectorScene *scene, const char *output_filename)
     }
 
     BoundingBox box = primitive_get_aabb(p);
-    double margin = (p->type == PRIM_SEGMENT) ? 0.5 : 0.0;
+    double margin = (p->type == PRIM_SEGMENT) ? TOLERANCE : 0.0;
     double x_min = floor(box.min.x - margin);
     double x_max = ceil(box.max.x + margin);
     double y_min = floor(box.min.y - margin);
