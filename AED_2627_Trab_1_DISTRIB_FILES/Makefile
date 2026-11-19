@@ -16,12 +16,20 @@ DEMO_SRC = demo_app.c primitive.c vector_scene.c
 DEMO_OBJ = $(DEMO_SRC:.c=.o)
 DEMO_TARGET = demo_app
 
+# Benchmark application target
+BENCHMARK_SRC = benchmark.c primitive.c vector_scene.c
+BENCHMARK_OBJ = $(BENCHMARK_SRC:.c=.o)
+BENCHMARK_TARGET = benchmark
+
 all: $(TEST_TARGET) $(DEMO_TARGET)
 
 $(TEST_TARGET): $(TEST_OBJ)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 $(DEMO_TARGET): $(DEMO_OBJ)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(BENCHMARK_TARGET): $(BENCHMARK_OBJ)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 %.o: %.c
@@ -48,10 +56,13 @@ test-fase5: $(TEST_TARGET)
 demo: $(DEMO_TARGET)
 	./$(DEMO_TARGET)
 
+bench: $(BENCHMARK_TARGET)
+	./$(BENCHMARK_TARGET)
+
 memcheck: $(TEST_TARGET)
 	valgrind --leak-check=full --show-leak-kinds=all ./$(TEST_TARGET)
 
 clean:
-	rm -f *.o $(TEST_TARGET) $(DEMO_TARGET) test_render.ppm created_scene.vsc created_scene.ppm modified_scene.vsc modified_scene.ppm
+	rm -f *.o $(TEST_TARGET) $(DEMO_TARGET) $(BENCHMARK_TARGET) test_render.ppm created_scene.vsc created_scene.ppm modified_scene.vsc modified_scene.ppm
 
-.PHONY: all test test-fase1 test-fase2 test-fase3 test-fase4 test-fase5 demo memcheck clean
+.PHONY: all test test-fase1 test-fase2 test-fase3 test-fase4 test-fase5 demo bench memcheck clean

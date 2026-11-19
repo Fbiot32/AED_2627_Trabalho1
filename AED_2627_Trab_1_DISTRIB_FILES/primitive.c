@@ -307,8 +307,8 @@ void primitive_destroy(Primitive *p)
     return;
   }
 
-  if (p->type == PRIM_POLYGON)
-  { // Só o Poligono é que tem memória interna (vertices)
+  if (p->type == PRIM_POLYGON)  // Só o Poligono tem memória interna (vertices)
+  { 
     free(p->geom.polygon.vertices);
   }
 
@@ -328,18 +328,24 @@ bool polygon_add_vertex(Primitive *p, Point pt)
   size_t newCapacity;
 
   if (p->geom.polygon.capacity == p->geom.polygon.num_vertices) {
+
     if (p->geom.polygon.capacity == 0) {
       newCapacity = 1;
     } else {
       newCapacity = p->geom.polygon.capacity * 2;
     }
+    
     Point* tmp = (Point*)realloc(p->geom.polygon.vertices, newCapacity * sizeof(Point));
+
     if (tmp == NULL)  {return false;}
+
+    // Só depois de verificar que o realloc funcionou, atribuimos os novos dados
     p->geom.polygon.vertices = tmp;
     p->geom.polygon.capacity = newCapacity;
     
   }
 
+  // Adicionar o novo vértice
   p->geom.polygon.vertices[p->geom.polygon.num_vertices] = pt;
   p->geom.polygon.num_vertices++;
   
@@ -354,11 +360,13 @@ bool polygon_remove_vertex(Primitive *p, size_t index)
     return false;
   }
 
+  // Mover os vértices para trás em vez de remover o último porque a ordem dos vértices importa
   for (size_t i = index; i + 1 < p->geom.polygon.num_vertices; i++)
   {
     p->geom.polygon.vertices[i] = p->geom.polygon.vertices[i+1];
   }
   
+  // Diminuir o num_vertices para ignorar o último
   p->geom.polygon.num_vertices--;
 
 
@@ -426,16 +434,17 @@ void primitive_update_aabb(Primitive *p)
 
     for (size_t i = 1; i < p->geom.polygon.num_vertices; i++)
     {
-      if (p->aabb.min.x >= p->geom.polygon.vertices[i].x){
+      if (p->aabb.min.x >= p->geom.polygon.vertices[i].x) {
         p->aabb.min.x = p->geom.polygon.vertices[i].x;
       } 
-      if (p->aabb.max.x <= p->geom.polygon.vertices[i].x){
+      if (p->aabb.max.x <= p->geom.polygon.vertices[i].x) {
         p->aabb.max.x = p->geom.polygon.vertices[i].x;
       }
 
-      if (p->aabb.min.y >= p->geom.polygon.vertices[i].y){
+      if (p->aabb.min.y >= p->geom.polygon.vertices[i].y) {
         p->aabb.min.y = p->geom.polygon.vertices[i].y;
-      } if(p->aabb.max.y <= p->geom.polygon.vertices[i].y) {
+      } 
+      if(p->aabb.max.y <= p->geom.polygon.vertices[i].y) {
         p->aabb.max.y = p->geom.polygon.vertices[i].y;
       }
     }
@@ -506,17 +515,21 @@ void primitive_scale(Primitive *p, double factor)
 
   case PRIM_SEGMENT: {
     Point pMedio;
+
     // Encontrar o ponto médio
     Point p1 = p->geom.segment.p1;
     Point p2 = p->geom.segment.p2;
     pMedio.x = (p1.x + p2.x) / 2;
     pMedio.y = (p1.y + p2.y) / 2;
+
     // Aumentar o x dos pontos cópia
     p1.x = pMedio.x + (p1.x - pMedio.x) * factor;
     p2.x = pMedio.x + (p2.x - pMedio.x) * factor;
+
     // Aumentar o y dos pontos cópia
     p1.y = pMedio.y + (p1.y - pMedio.y) * factor;
     p2.y = pMedio.y + (p2.y - pMedio.y) * factor;
+
     // Atribuir aos originais
     p->geom.segment.p1 = p1;
     p->geom.segment.p2 = p2;
@@ -524,16 +537,18 @@ void primitive_scale(Primitive *p, double factor)
   }
   case PRIM_POLYGON: {
     primitive_update_aabb(p);
+
     // Encontrar o centro do aabb
     Point pCentro;
     pCentro.x = (p->aabb.max.x + p->aabb.min.x) / 2;
     pCentro.y = (p->aabb.max.y + p->aabb.min.y) / 2;
+
     // Aumentar os pontos à escala
     for (size_t i = 0; i < p->geom.polygon.num_vertices; i++)
     {
       p->geom.polygon.vertices[i].x = pCentro.x + (p->geom.polygon.vertices[i].x - pCentro.x) * factor;
       p->geom.polygon.vertices[i].y = pCentro.y + (p->geom.polygon.vertices[i].y - pCentro.y) * factor;
-    }    
+    }
     break;
   }
   }

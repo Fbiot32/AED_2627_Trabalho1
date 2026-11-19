@@ -23,6 +23,7 @@
 #include "primitive_internal.h"
 
 #define TOLERANCE 0.5 // Distância máxima, em píxeis, a que um ponto ainda conta como estando sobre um segmento (≈ 1 píxel de espessura)
+                      // Tem de ter o mesmo valor do primitive.c
 // ============================================================================
 // CONCRETE STRUCT LAYOUT (OPAQUE ADT)
 // ============================================================================
@@ -248,8 +249,6 @@ int vector_scene_add_primitive(VectorScene *scene, Primitive *p)
   scene->primitives[scene->count] = p;
   scene->count++;
 
-  // Update bouding box
-  primitive_update_aabb(p);
 
   return p->id;
 }
@@ -299,7 +298,6 @@ bool vector_scene_translate_primitive(VectorScene *scene, int id, double dx, dou
   }
 
   primitive_translate(p, dx, dy);
-  primitive_update_aabb(p);
 
   return true;
 }
@@ -349,6 +347,13 @@ static void insertion_sort_by_z(Primitive **arr, size_t count, SortStats *stats)
   {
 
     Primitive *key = arr[i];
+
+    // Incrementar todas as atribuições
+    if (stats != NULL)
+    {
+      stats->swaps++;
+    }
+    
     size_t j = i;
 
     while (j > 0)
@@ -370,7 +375,7 @@ static void insertion_sort_by_z(Primitive **arr, size_t count, SortStats *stats)
       }
       j--;
     }
-
+    
     if (j != i)
     {
       arr[j] = key;
@@ -503,6 +508,8 @@ void vector_scene_sort_by_z(VectorScene *scene, bool use_fast_sort, SortStats *s
   }
 
   Primitive **temp_arr = malloc(scene->count * sizeof *temp_arr);
+
+  // Se o malloc falhar a cena fica por ordenar
   if (temp_arr == NULL)
   {
     return;
@@ -576,11 +583,6 @@ Primitive *vector_scene_pick_top_primitive(const VectorScene *scene, Point pt, b
 
 bool vector_scene_render(const VectorScene *scene, const char *output_filename)
 {
-
-  if (!scene || !output_filename)
-  {
-    return false;
-  }
 
   if (scene == NULL || output_filename == NULL || scene->width <= 0 || scene->height <= 0)
   {
