@@ -31,7 +31,8 @@ typedef struct _Primitive Primitive;
 /**
  * @brief Color in RGB format (0-255 per channel).
  */
-typedef struct {
+typedef struct
+{
   uint8_t r; /**< Red channel value [0..255] */
   uint8_t g; /**< Green channel value [0..255] */
   uint8_t b; /**< Blue channel value [0..255] */
@@ -40,7 +41,8 @@ typedef struct {
 /**
  * @brief Point in 2D Cartesian plane.
  */
-typedef struct {
+typedef struct
+{
   double x; /**< Horizontal coordinate */
   double y; /**< Vertical coordinate */
 } Point;
@@ -48,7 +50,8 @@ typedef struct {
 /**
  * @brief Axis-Aligned Bounding Box (AABB).
  */
-typedef struct {
+typedef struct
+{
   Point min; /**< Bottom-left corner (x_min, y_min) */
   Point max; /**< Top-right corner (x_max, y_max) */
 } BoundingBox;
@@ -60,7 +63,8 @@ typedef struct {
 /**
  * @brief Primitive type identifier.
  */
-typedef enum {
+typedef enum
+{
   PRIM_CIRCLE,    /**< Circle shape defined by center and radius */
   PRIM_RECTANGLE, /**< Rectangle defined by top-left corner, width, height */
   PRIM_SEGMENT,   /**< Line segment defined by two endpoints */
@@ -83,8 +87,13 @@ typedef enum {
  * @return Pointer to allocated Primitive, or NULL on allocation failure.
  * @pre radius > 0.0 && alpha >= 0.0 && alpha <= 1.0
  */
-Primitive* primitive_create_circle(int id, Point center, double radius,
-                                   Color color, double alpha, int z_index);
+Primitive *primitive_create_circle(
+    int id,
+    Point center,
+    double radius,
+    Color color,
+    double alpha,
+    int z_index);
 
 /**
  * @brief Creates and dynamically allocates a Rectangle primitive.
@@ -99,9 +108,14 @@ Primitive* primitive_create_circle(int id, Point center, double radius,
  * @return Pointer to allocated Primitive, or NULL on allocation failure.
  * @pre width > 0.0 && height > 0.0 && alpha >= 0.0 && alpha <= 1.0
  */
-Primitive* primitive_create_rectangle(int id, Point top_left, double width,
-                                      double height, Color color, double alpha,
-                                      int z_index);
+Primitive *primitive_create_rectangle(
+    int id,
+    Point top_left,
+    double width,
+    double height,
+    Color color,
+    double alpha,
+    int z_index);
 
 /**
  * @brief Creates and dynamically allocates a Segment primitive.
@@ -115,8 +129,13 @@ Primitive* primitive_create_rectangle(int id, Point top_left, double width,
  * @return Pointer to allocated Primitive, or NULL on allocation failure.
  * @pre alpha >= 0.0 && alpha <= 1.0
  */
-Primitive* primitive_create_segment(int id, Point p1, Point p2, Color color,
-                                    double alpha, int z_index);
+Primitive *primitive_create_segment(
+    int id,
+    Point p1,
+    Point p2,
+    Color color,
+    double alpha,
+    int z_index);
 
 /**
  * @brief Creates and dynamically allocates an empty Polygon primitive.
@@ -129,8 +148,11 @@ Primitive* primitive_create_segment(int id, Point p1, Point p2, Color color,
  * @pre alpha >= 0.0 && alpha <= 1.0
  * @note Initializes vertices array to NULL with capacity 0 and num_vertices 0.
  */
-Primitive* primitive_create_polygon(int id, Color color, double alpha,
-                                    int z_index);
+Primitive *primitive_create_polygon(
+    int id,
+    Color color,
+    double alpha,
+    int z_index);
 
 /**
  * @brief Frees all memory associated with a primitive structure.
@@ -138,7 +160,7 @@ Primitive* primitive_create_polygon(int id, Color color, double alpha,
  * @param p Pointer to Primitive structure to be destroyed.
  * @note Safe to call with NULL. Frees internal polygon vertices array.
  */
-void primitive_destroy(Primitive* p);
+void primitive_destroy(Primitive *p);
 
 // ============================================================================
 // DYNAMIC ARRAY MANIPULATION (POLYGON)
@@ -156,7 +178,7 @@ void primitive_destroy(Primitive* p);
  * @pre p != NULL && p->type == PRIM_POLYGON
  * @note Sets p->is_aabb_dirty = true.
  */
-bool polygon_add_vertex(Primitive* p, Point pt);
+bool polygon_add_vertex(Primitive *p, Point pt);
 
 /**
  * @brief Removes a vertex from polygon array by index and shifts elements.
@@ -168,7 +190,7 @@ bool polygon_add_vertex(Primitive* p, Point pt);
  * p->geom.polygon.num_vertices
  * @note Shifts remaining vertices left and sets p->is_aabb_dirty = true.
  */
-bool polygon_remove_vertex(Primitive* p, size_t index);
+bool polygon_remove_vertex(Primitive *p, size_t index);
 
 // ============================================================================
 // INSPECTION / GETTER FUNCTIONS
@@ -180,7 +202,7 @@ bool polygon_remove_vertex(Primitive* p, size_t index);
  * @param p Pointer to Primitive structure.
  * @return Unique primitive id (id >= 0), or -1 if p is NULL
  */
-int primitive_get_id(const Primitive* p);
+int primitive_get_id(const Primitive *p);
 
 /**
  * @brief Get the geometric type of the primitive.
@@ -189,7 +211,7 @@ int primitive_get_id(const Primitive* p);
  * @return Primitive type (PRIM_CIRCLE, PRIM_RECTANGLE, etc.).
  * @pre p != NULL
  */
-PrimitiveType primitive_get_type(const Primitive* p);
+PrimitiveType primitive_get_type(const Primitive *p);
 
 /**
  * @brief Get the primitive depth index (z_index).
@@ -197,7 +219,7 @@ PrimitiveType primitive_get_type(const Primitive* p);
  * @param p Pointer to Primitive structure.
  * @return z_index value, or 0 if p is NULL.
  */
-int primitive_get_z_index(const Primitive* p);
+int primitive_get_z_index(const Primitive *p);
 
 /**
  * @brief Get the primitive background RGB color.
@@ -205,7 +227,7 @@ int primitive_get_z_index(const Primitive* p);
  * @param p Pointer to Primitive structure.
  * @return Color RGB struct, or black (0,0,0) if p is NULL.
  */
-Color primitive_get_color(const Primitive* p);
+Color primitive_get_color(const Primitive *p);
 
 /**
  * @brief Get the primitive opacity value (alpha).
@@ -213,7 +235,7 @@ Color primitive_get_color(const Primitive* p);
  * @param p Pointer to Primitive structure.
  * @return Alpha value in [0.0..1.0], or 0.0 if p is NULL.
  */
-double primitive_get_alpha(const Primitive* p);
+double primitive_get_alpha(const Primitive *p);
 
 /**
  * @brief Get the updated bounding box (AABB) for the primitive.
@@ -225,7 +247,7 @@ double primitive_get_alpha(const Primitive* p);
  * @return BoundingBox struct with min/max coordinates.
  * @pre p != NULL
  */
-BoundingBox primitive_get_aabb(Primitive* p);
+BoundingBox primitive_get_aabb(Primitive *p);
 
 /**
  * @brief Get the current number of vertices of a Polygon type primitive.
@@ -233,7 +255,7 @@ BoundingBox primitive_get_aabb(Primitive* p);
  * @param p Pointer to Primitive structure.
  * @return Vertex count, or 0 if p is NULL or not a Polygon.
  */
-size_t polygon_get_num_vertices(const Primitive* p);
+size_t polygon_get_num_vertices(const Primitive *p);
 
 // ============================================================================
 // GEOMETRIC OPERATIONS AND TRANSFORMATIONS
@@ -245,7 +267,7 @@ size_t polygon_get_num_vertices(const Primitive* p);
  * @param p Pointer to Primitive structure.
  * @note Sets p->is_aabb_dirty = false upon completion.
  */
-void primitive_update_aabb(Primitive* p);
+void primitive_update_aabb(Primitive *p);
 
 /**
  * @brief Translates primitive geometry by displacement vector (dx, dy).
@@ -255,7 +277,7 @@ void primitive_update_aabb(Primitive* p);
  * @param dy Vertical displacement.
  * @note Sets p->is_aabb_dirty = true.
  */
-void primitive_translate(Primitive* p, double dx, double dy);
+void primitive_translate(Primitive *p, double dx, double dy);
 
 /**
  * @brief Scales primitive geometry relative to its origin/center.
@@ -265,7 +287,7 @@ void primitive_translate(Primitive* p, double dx, double dy);
  * @pre p != NULL && factor > 0.0
  * @note Sets p->is_aabb_dirty = true.
  */
-void primitive_scale(Primitive* p, double factor);
+void primitive_scale(Primitive *p, double factor);
 
 /**
  * @brief Checks if a 2D point is contained within the primitive.
@@ -275,6 +297,6 @@ void primitive_scale(Primitive* p, double factor);
  * @return true if point is inside or on boundary, false otherwise.
  * @note Performs narrow-phase exact geometric test.
  */
-bool primitive_contains_point(const Primitive* p, Point pt);
+bool primitive_contains_point(const Primitive *p, Point pt);
 
-#endif  // PRIMITIVE_H
+#endif // PRIMITIVE_H

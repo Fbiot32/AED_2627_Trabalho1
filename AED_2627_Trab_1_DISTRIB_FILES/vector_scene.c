@@ -32,6 +32,7 @@
  * @brief Concrete structure definition for VectorScene.
  * Hidden from vector_scene.h to enforce encapsulation.
  */
+
 struct _VectorScene
 {
   int width;              /**< Canvas width in pixels */
@@ -879,7 +880,7 @@ VectorScene *vector_scene_load_text(const char *filename)
           if (p)
           {
             char *ptr = line;
-            for (int k = 0; k < 7; k++)
+            for (int k = 0; k < 8; k++)
             {
               while (*ptr && *ptr != ' ' && *ptr != '\t')
               {
