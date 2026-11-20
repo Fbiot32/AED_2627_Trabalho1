@@ -201,7 +201,9 @@ void vector_scene_destroy(VectorScene *scene)
     primitive_destroy(scene->primitives[i]); // From primitive.c
   }
 
+  // Only after, delete the primitives
   free(scene->primitives);
+  // and then the scene
   free(scene);
 }
 
@@ -249,7 +251,6 @@ int vector_scene_add_primitive(VectorScene *scene, Primitive *p)
   // Store the shape's address in the next available space
   scene->primitives[scene->count] = p;
   scene->count++;
-
 
   return p->id;
 }
@@ -354,7 +355,7 @@ static void insertion_sort_by_z(Primitive **arr, size_t count, SortStats *stats)
     {
       stats->swaps++;
     }
-    
+
     size_t j = i;
 
     while (j > 0)
@@ -376,7 +377,7 @@ static void insertion_sort_by_z(Primitive **arr, size_t count, SortStats *stats)
       }
       j--;
     }
-    
+
     if (j != i)
     {
       arr[j] = key;
@@ -548,7 +549,6 @@ Primitive *vector_scene_pick_top_primitive(const VectorScene *scene, Point pt, b
     {
       BoundingBox box = primitive_get_aabb(p);
 
-      
       double margin = (p->type == PRIM_SEGMENT) ? TOLERANCE : 0.0;
 
       if (stats != NULL)
@@ -567,6 +567,7 @@ Primitive *vector_scene_pick_top_primitive(const VectorScene *scene, Point pt, b
     {
       stats->exact_tests++;
     }
+
 
     if (primitive_contains_point(p, pt) &&
         (top == NULL || p->z_index > top->z_index))
